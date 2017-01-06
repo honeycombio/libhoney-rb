@@ -17,23 +17,24 @@ gem 'libhoney', :git => 'http://github.com/honeycombio/libhoney-rb.git'
 ```
 
 ## Example Usage
+
+Honeycomb can calculate all sorts of statistics, so send the values you care about and let us crunch the averages, percentiles, lower/upper bounds, cardinality -- whatever you want -- for you.
+
 ```ruby
 require 'libhoney'
 
-# create a client instance
-honey = Libhoney::Client.new(:writekey => "your writekey",
-                             :dataset => "your dataset")
+# Create a client instance
+honeycomb = Libhoney::Client.new(:writekey => "YOUR_WRITE_KEY",
+                                 :dataset => "honeycomb-ruby-example")
 
-# create an event and add fields to it
-event = honey.event
-event.add_field("duration_ms", 153.12)
-event.add_field("method", "get")
-event.add_field("hostname", "appserver15")
-event.add_field("payload_length", 27)
-# send the event
-event.send
+honeycomb.send_now({
+  duration_ms: 153.12,
+  method: "get",
+  hostname: "appserver15",
+  payload_length: 27
+})
 
-# when all done, call close
+# Call close to flush any pending calls to Honeycomb
 honey.close
 ```
 

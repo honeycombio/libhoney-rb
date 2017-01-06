@@ -14,7 +14,7 @@ def factorial(n)
 end
 
 # run factorial. libh_builder comes with some fields already populated
-# (namely, "version", "num_threads", and "builder")
+# (namely, "version", "num_threads", and "range")
 def run_fact(low, high, libh_builder)
   for i in low..high do
     ev = libh_builder.event
