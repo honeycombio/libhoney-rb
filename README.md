@@ -1,16 +1,6 @@
-libhoney
-========
-Ruby gem for sending events to http://honeycomb.io from within your ruby code.
+# libhoney [![Build Status](https://travis-ci.org/honeycombio/libhoney-rb.svg?branch=master)](https://travis-ci.org/honeycombio/libhoney-rb)
 
-[![Build Status](https://travis-ci.org/honeycombio/libhoney-rb.svg?branch=master)](https://travis-ci.org/honeycombio/libhoney-rb)
-
-## Summary
-
-libhoney is written to ease the process of sending data to Honeycomb from within
-your ruby code.
-
-For an overview of how to use a honeycomb library, see our documentation at
-https://honeycomb.io/docs/send-data/sdks/
+Ruby gem for sending events to [Honeycomb](https://honeycomb.io). (See here for more information about [using Honeycomb](https://honeycomb.io/intro/) and [its libraries](https://honeycomb.io/docs/send-data/sdks).)
 
 ## Installation
 
@@ -38,6 +28,8 @@ honey = Libhoney::Client.new(:writekey => "your writekey",
 event = honey.event
 event.add_field("duration_ms", 153.12)
 event.add_field("method", "get")
+event.add_field("hostname", "appserver15")
+event.add_field("payload_length", 27)
 # send the event
 event.send
 

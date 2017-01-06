@@ -13,6 +13,8 @@ def factorial(n)
   return n * factorial(n - 1)
 end
 
+# run factorial. libh_builder comes with some fields already populated
+# (namely, "version", "num_threads", and "builder")
 def run_fact(low, high, libh_builder)
   for i in low..high do
     ev = libh_builder.event
@@ -42,11 +44,16 @@ libhoney = Libhoney::Client.new(:writekey => writekey,
 resps = libhoney.responses()
 Thread.new do
   begin
+    # attach fields to top-level instance
     libhoney.add_field("version", "3.4.5")
     libhoney.add_dynamic_field("num_threads", Proc.new { Thread.list.select {|thread| thread.status == "run"}.count })
+
+    # sends an event with "version", "num_threads", and "status" fields
     libhoney.send_now({:status => "starting run"})
     run_fact(1, 20, libhoney.builder({:range => "low"}))
     run_fact(31, 40, libhoney.builder({:range => "high"}))
+
+    # sends an event with "version", "num_threads", and "status" fields
     libhoney.send_now({:status => "ending run"})
     libhoney.close(true)
   rescue Exception => e
