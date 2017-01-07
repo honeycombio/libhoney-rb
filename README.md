@@ -38,7 +38,7 @@ honeycomb.send_now({
 honey.close
 ```
 
-You can find a more complete example demonstrating usage in `example/fact.rb`
+You can find a more complete example demonstrating usage in [`example/fact.rb`](example/fact.rb)
 
 ## Contributions
 
