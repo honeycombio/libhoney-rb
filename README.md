@@ -35,7 +35,7 @@ honeycomb.send_now({
 })
 
 # Call close to flush any pending calls to Honeycomb
-honey.close
+honeycomb.close
 ```
 
 You can find a more complete example demonstrating usage in [`example/fact.rb`](example/fact.rb)
