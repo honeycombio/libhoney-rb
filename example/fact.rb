@@ -29,9 +29,7 @@ def run_fact(low, high, libh_builder)
 end
 
 def read_responses(resp_queue)
-  loop do
-    resp = resp_queue.pop()
-    break if resp == nil
+  while resp = resp_queue.pop()
     puts "sending event with metadata #{resp.metadata} took #{resp.duration*1000}ms and got response code #{resp.status_code}"
   end
 end
