@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.files       = ['lib/libhoney.rb', 'lib/libhoney/version.rb']
   spec.homepage    = 'https://github.com/honeycombio/libhoney-rb'
   spec.license     = 'Apache-2.0'
-  
+
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
   end
@@ -29,5 +29,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "webmock", "~> 2.1"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "yardstick", "~> 0.9"
+  spec.add_development_dependency "bump", "~> 0.5"
   spec.add_dependency "http", "~> 2.0"
 end
