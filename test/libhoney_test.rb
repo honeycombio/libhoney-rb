@@ -226,25 +226,29 @@ class LibhoneyTest < Minitest::Test
     }
   end
 
+  def does_not_send
+    lambda { |event|
+      raise Exception.new("libhoney: unexpected send occured")
+    }
+  end
+
   def test_sampling
-    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-sampling').
-      to_return(:status => 200, :body => 'OK')
-
-
     builder = @honey.builder
     builder.dataset = "mydataset-sampling"
     builder.add_field("hi", "bye")
 
-    event = builder.event
-    event.sample_rate = 5
-    @honey.stub(:should_drop, check_and_drop(5)) do
-      event.send
-    end
+    @honey.stub(:send_event, does_not_send) do
+      event = builder.event
+      event.sample_rate = 5
+      @honey.stub(:should_drop, check_and_drop(5)) do
+        event.send
+      end
 
-    event = builder.event
-    event.sample_rate = 1
-    @honey.stub(:should_drop, check_and_drop(1)) do
-      event.send
+      event = builder.event
+      event.sample_rate = 1
+      @honey.stub(:should_drop, check_and_drop(1)) do
+        event.send
+      end
     end
   end
 end

@@ -81,6 +81,7 @@ module Libhoney
       # discard if sampling rate says so
       if @libhoney.should_drop(self.sample_rate)
         @libhoney.send_dropped_response(self, "event dropped due to sampling")
+        return
       end
 
       self.send_presampled()
