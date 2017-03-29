@@ -5,7 +5,6 @@ require "libhoney/version"
 Gem::Specification.new do |spec|
   spec.name        = 'libhoney'
   spec.version     = Libhoney::VERSION
-  spec.date        = '2016-11-07'
 
   spec.summary     = "send data to Honeycomb"
   spec.description = "Ruby gem for sending data to Honeycomb"
