@@ -89,7 +89,7 @@ module Libhoney
     # @return [Event] an Event instance
     # @example adding data at send-time
     #   ev = builder.event
-    #   ev.addField("additionalField", value)
+    #   ev.add_field("additionalField", value)
     #   ev.send
     def event
       Event.new(@libhoney, self, @fields, @dyn_fields)

@@ -132,7 +132,7 @@ module Libhoney
     # @param val [any] value of field to add.
     # @return [self] this Client instance
     # @example
-    #   honey.addField("responseTime_ms", 100)
+    #   honey.add_field("responseTime_ms", 100)
     def add_field(name, val)
       @builder.add_field(name, val)
       self
