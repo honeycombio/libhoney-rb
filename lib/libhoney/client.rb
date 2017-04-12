@@ -105,9 +105,8 @@ module Libhoney
 
     ##
     # Nuke the queue and wait for inflight requests to complete before returning.
-    # If you set drain=true, it will not clear the queue, so all queued requests
-    # will drain before exiting.
-    def close(drain=false)
+    # If you set drain=false, all queued requests will be dropped on the floor.
+    def close(drain=true)
       return @tx.close(drain) if @tx
       0
     end
