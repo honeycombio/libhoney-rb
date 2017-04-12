@@ -41,7 +41,7 @@ class LibhoneyBuilderTest < Minitest::Test
                                   :api_host => 'http://something.else')
   end
   def teardown
-    @honey.close
+    @honey.close(false)
   end
   def test_builder_inheritance
     @honey.add_field('argle', 'bargle')
@@ -98,7 +98,7 @@ class LibhoneyBuilderTest < Minitest::Test
     builder = @honey.builder
     builder.send_now({'argle' => 'bargle'})
 
-    @honey.close(true)
+    @honey.close
 
     assert_requested :post, 'http://something.else/1/events/dataset', times: 1
   end
@@ -163,7 +163,7 @@ class LibhoneyTest < Minitest::Test
       e.add({'test' => i})
       e.send
     end
-    @honey.close(true)
+    @honey.close
 
     assert_requested :post, 'https://api.honeycomb.io/1/events/mydataset-send', times: numtests+1
   end
@@ -174,7 +174,7 @@ class LibhoneyTest < Minitest::Test
 
     @honey.send_now({'argle' => 'bargle'})
 
-    @honey.close(true)
+    @honey.close
 
     assert_requested :post, 'https://api.honeycomb.io/1/events/mydataset', times: 1
   end
