@@ -1,6 +1,6 @@
 # libhoney [![Build Status](https://travis-ci.org/honeycombio/libhoney-rb.svg?branch=master)](https://travis-ci.org/honeycombio/libhoney-rb) [![Gem Version](https://badge.fury.io/rb/libhoney.svg)](https://badge.fury.io/rb/libhoney)
 
-Ruby gem for sending events to [Honeycomb](https://honeycomb.io). (See here for more information about [using Honeycomb](https://honeycomb.io/intro/) and [its libraries](https://honeycomb.io/docs/send-data/sdks).)
+Ruby gem for sending events to [Honeycomb](https://honeycomb.io). (For more information, see the [documentation](https://honeycomb.io/docs/) and [Ruby SDK guide](https://honeycomb.io/docs/connect/ruby).)
 
 ## Installation
 
@@ -15,6 +15,12 @@ If you're using bundler, you can also reference the git repo and stay on the ble
 ```
 gem 'libhoney', :git => 'http://github.com/honeycombio/libhoney-rb.git'
 ```
+
+## Documentation
+
+An API reference is available at https://honeycombio.github.io/libhoney-rb
+
+Docs are generated via `yard` and hosted on the `gh-pages` branch of this repo.
 
 ## Example Usage
 
@@ -56,5 +62,3 @@ version, run
 bump patch --tag   # Or bump minor --tag, etc.
 git push --follow-tags
 ```
-
-Docs are generated via `rdoc` and hosted via the `gh-pages` branch of this repo.
