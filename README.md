@@ -18,9 +18,7 @@ gem 'libhoney', :git => 'http://github.com/honeycombio/libhoney-rb.git'
 
 ## Documentation
 
-An API reference is available at https://honeycombio.github.io/libhoney-rb
-
-Docs are generated via `yard` and hosted on the `gh-pages` branch of this repo.
+An API reference is available at http://www.rubydoc.info/gems/libhoney
 
 ## Example Usage
 
