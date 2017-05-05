@@ -10,10 +10,18 @@ To install the stable release:
 gem install libhoney
 ```
 
-If you're using bundler, you can also reference the git repo and stay on the bleeding age by putting this in your `Gemfile`:
+or add `libhoney` to your Gemfile:
 
 ```
-gem 'libhoney', :git => 'http://github.com/honeycombio/libhoney-rb.git'
+gem 'libhoney'
+# or, to follow the bleeding edge:
+#gem 'libhoney', git: 'https://github.com/honeycombio/libhoney-rb.git'
+```
+
+This gem has some native dependencies, so if you see an error along the lines of "Failed to build gem native extension", you may need to install the Ruby development headers and a C++ compiler; e.g. on Ubuntu
+
+```
+sudo apt-get install build-essential ruby-dev
 ```
 
 ## Documentation
