@@ -131,6 +131,10 @@ class LibhoneyEventTest < Minitest::Test
   def test_add
     @event.add({'foo'=>'bar'})
     assert_equal 'bar', @event.data['foo']
+
+    @event.add({'map'=>{ 'one' => 1, 'two' => 'dos' }})
+    assert_equal ({ 'one' => 1, 'two' => 'dos' }), @event.data['map']
+    assert_equal "{\"foo\":\"bar\",\"map\":{\"one\":1,\"two\":\"dos\"}}", @event.data.to_json
   end
 end
 
