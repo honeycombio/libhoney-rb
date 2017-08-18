@@ -1,7 +1,6 @@
 require 'thread'
 require 'time'
 require 'json'
-require 'http'
 
 # define a few additions that proxy access through Client's builder.  makes Client much tighter.
 class Class
