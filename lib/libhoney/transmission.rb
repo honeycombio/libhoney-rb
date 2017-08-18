@@ -43,17 +43,18 @@ module Libhoney
     end
 
     def send_loop
-      conn = Faraday.new(:url => e.api_host) do |faraday|
-        faraday.request  :json
-        faraday.adapter  :net_http_persistent
-      end
-
       # eat events until we run out
       loop {
         e = @send_queue.pop
         break if e == nil
 
         before = Time.now
+
+        conn = Faraday.new(:url => e.api_host) do |faraday|
+          faraday.request  :json
+          faraday.response :logger
+          faraday.adapter  :net_http_persistent
+        end
 
         resp = conn.post do |req|
           req.url '/1/events/' + e.dataset
