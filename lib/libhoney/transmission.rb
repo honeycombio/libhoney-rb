@@ -26,7 +26,7 @@ module Libhoney
       @threads = []
       @lock = Mutex.new
     end
-    
+
     def add(event)
       begin
         @send_queue.enq(event, !@block_on_send)
@@ -52,7 +52,6 @@ module Libhoney
 
         conn = Faraday.new(:url => e.api_host) do |faraday|
           faraday.request  :json
-          faraday.response :logger
           faraday.adapter  :net_http_persistent
         end
 
