@@ -18,12 +18,6 @@ gem 'libhoney'
 #gem 'libhoney', git: 'https://github.com/honeycombio/libhoney-rb.git'
 ```
 
-This gem has some native dependencies, so if you see an error along the lines of "Failed to build gem native extension", you may need to install the Ruby development headers and a C++ compiler; e.g. on Ubuntu
-
-```
-sudo apt-get install build-essential ruby-dev
-```
-
 ## Documentation
 
 An API reference is available at http://www.rubydoc.info/gems/libhoney
