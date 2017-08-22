@@ -1,7 +1,6 @@
 require 'thread'
 require 'time'
 require 'json'
-require 'http'
 
 # define a few additions that proxy access through Client's builder.  makes Client much tighter.
 class Class
@@ -50,7 +49,7 @@ module Libhoney
     # Instantiates libhoney and prepares it to send events to Honeycomb.
     #
     # @param writekey [String] the write key from your honeycomb team
-    # @param dataset [String] the dataset you want 
+    # @param dataset [String] the dataset you want
     # @param sample_rate [Fixnum] cause libhoney to send 1 out of sampleRate events.  overrides the libhoney instance's value.
     # @param api_host [String] the base url to send events to
     # @param block_on_send [Boolean] if more than pending_work_capacity events are written, block sending further events
@@ -69,7 +68,7 @@ module Libhoney
       raise Exception.new('libhoney:  max_concurrent_batches must be greater than 0') if max_concurrent_batches < 1
       raise Exception.new('libhoney:  sample rate must be greater than 0') if sample_rate < 1
 
-      raise Exception.new("libhoney:  Ruby versions < 2.2 are not supported") if !Gem::Dependency.new("ruby", "~> 2.2").match?("ruby", RUBY_VERSION)      
+      raise Exception.new("libhoney:  Ruby versions < 2.2 are not supported") if !Gem::Dependency.new("ruby", "~> 2.2").match?("ruby", RUBY_VERSION)
       @builder = Builder.new(self, nil)
       @builder.writekey = writekey
       @builder.dataset = dataset

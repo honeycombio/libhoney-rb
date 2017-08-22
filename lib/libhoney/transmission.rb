@@ -1,4 +1,6 @@
 require 'libhoney/response'
+require 'faraday'
+require 'faraday_middleware'
 
 module Libhoney
   # @api private
@@ -24,7 +26,7 @@ module Libhoney
       @threads = []
       @lock = Mutex.new
     end
-    
+
     def add(event)
       begin
         @send_queue.enq(event, !@block_on_send)
@@ -47,12 +49,26 @@ module Libhoney
         break if e == nil
 
         before = Time.now
-        resp = HTTP.headers('User-Agent' => "libhoney-rb/#{VERSION}",
-                            'Content-Type' => 'application/json',
-                            'X-Honeycomb-Team' => e.writekey,
-                            'X-Honeycomb-SampleRate' => e.sample_rate,
-                            'X-Event-Time' => e.timestamp.iso8601)
-               .post(URI.join(e.api_host, '/1/events/', e.dataset), :json => e.data)
+
+        conn = Faraday.new(:url => e.api_host) do |faraday|
+          faraday.request  :json
+          faraday.adapter  :net_http_persistent
+        end
+
+        resp = conn.post do |req|
+          req.url '/1/events/' + e.dataset
+          req.headers = {
+            'User-Agent' => "libhoney-rb/#{VERSION}",
+            'Content-Type' => 'application/json',
+            'X-Honeycomb-Team' => e.writekey,
+            'X-Honeycomb-SampleRate' => e.sample_rate.to_s,
+            'X-Event-Time' => e.timestamp.iso8601
+          }
+          req.body = e.data
+        end
+
+        # TODO handle faraday errors
+
         after = Time.now
 
         response = Response.new(:duration => after - before,
