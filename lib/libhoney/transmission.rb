@@ -50,30 +50,21 @@ module Libhoney
 
         before = Time.now
 
-        conn = Faraday.new(:url => e.api_host) do |faraday|
-          faraday.request  :json
-          faraday.adapter  :net_http_persistent
+        begin
+          resp = do_send(e)
+
+          response = Response.new(:status_code => resp.status)
+        rescue Exception => error
+          # catch a broader swath of exceptions than is usually good practice,
+          # because this is effectively the top-level exception handler for the
+          # sender threads, and we don't want those threads to die (leaving
+          # nothing consuming the queue).
+          response = Response.new(:error => error)
+        ensure
+          response.duration = Time.now - before
+          response.metadata = e.metadata
         end
 
-        resp = conn.post do |req|
-          req.url '/1/events/' + e.dataset
-          req.headers = {
-            'User-Agent' => "libhoney-rb/#{VERSION}",
-            'Content-Type' => 'application/json',
-            'X-Honeycomb-Team' => e.writekey,
-            'X-Honeycomb-SampleRate' => e.sample_rate.to_s,
-            'X-Event-Time' => e.timestamp.iso8601
-          }
-          req.body = e.data
-        end
-
-        # TODO handle faraday errors
-
-        after = Time.now
-
-        response = Response.new(:duration => after - before,
-                                :status_code => resp.status,
-                                :metadata => e.metadata)
         begin
           @responses.enq(response, !@block_on_responses)
         rescue ThreadError
@@ -97,6 +88,30 @@ module Libhoney
       @responses.enq(nil)
 
       0
+    end
+
+    private
+    def do_send(event)
+      conn = Faraday.new(:url => event.api_host) do |faraday|
+        faraday.request  :json
+        faraday.adapter  :net_http_persistent
+      end
+
+      resp = conn.post do |req|
+        req.url '/1/events/' + event.dataset
+        req.headers = {
+          'User-Agent' => "libhoney-rb/#{VERSION}",
+          'Content-Type' => 'application/json',
+          'X-Honeycomb-Team' => event.writekey,
+          'X-Honeycomb-SampleRate' => event.sample_rate.to_s,
+          'X-Event-Time' => event.timestamp.iso8601
+        }
+        req.body = event.data
+      end
+
+      # TODO handle faraday errors
+
+      resp
     end
   end
 end
