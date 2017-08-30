@@ -255,4 +255,28 @@ class LibhoneyTest < Minitest::Test
       end
     end
   end
+
+  def test_error_handling
+    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset').
+      to_raise('the network is dark and full of terrors').times(20).
+      to_return(:status => 200, :body => 'OK')
+
+    20.times do
+      event = @honey.event
+      event.add_field 'hi', 'bye'
+      event.send
+    end
+
+    20.times do
+      response = @honey.responses.pop
+      assert_kind_of(Exception, response.error)
+    end
+
+    @honey.send_now({'argle' => 'bargle'})
+
+    response = @honey.responses.pop
+    assert_equal(200, response.status_code)
+
+    @honey.close
+  end
 end
