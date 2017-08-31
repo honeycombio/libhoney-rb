@@ -54,7 +54,7 @@ module Libhoney
     # @param api_host [String] the base url to send events to
     # @param block_on_send [Boolean] if more than pending_work_capacity events are written, block sending further events
     # @param block_on_responses [Boolean] if true, block if there is no thread reading from the response queue
-    def initialize(writekey: '',
+    def initialize(writekey: ENV['HONEYCOMB_WRITEKEY'] || '',
                    dataset: '',
                    sample_rate: 1,
                    api_host: 'https://api.honeycomb.io/',

@@ -44,6 +44,8 @@ honeycomb.send_now({
 honeycomb.close
 ```
 
+It is also possible to supply `writekey` with the `$HONEYCOMB_WRITEKEY` environment variable.
+
 You can find a more complete example demonstrating usage in [`example/fact.rb`](example/fact.rb)
 
 ## Contributions
