@@ -258,7 +258,7 @@ class LibhoneyTest < Minitest::Test
 
   def test_error_handling
     stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset').
-      to_raise('the network is dark and full of terrors').times(20).
+      to_raise('the network is dark and full of errors').times(20).
       to_return(:status => 200, :body => 'OK')
 
     20.times do
