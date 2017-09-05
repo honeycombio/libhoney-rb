@@ -17,6 +17,10 @@ class LibhoneyDefaultTest < Minitest::Test
     assert_equal 10, honey.max_concurrent_batches
     assert_equal 1000, honey.pending_work_capacity
 
+    ENV['HONEYCOMB_WRITEKEY'] = 'env_writekey'
+    honey = Libhoney::Client.new()
+    assert_equal 'env_writekey', honey.writekey
+
     honey = Libhoney::Client.new(:writekey => 'writekey', :dataset => 'dataset', :sample_rate => 4,
                                  :api_host => 'http://something.else', :block_on_send => true,
                                  :block_on_responses => true, :max_batch_size => 100,
