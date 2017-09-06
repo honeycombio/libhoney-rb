@@ -30,7 +30,7 @@ Honeycomb can calculate all sorts of statistics, so send the values you care abo
 require 'libhoney'
 
 # Create a client instance
-honeycomb = Libhoney::Client.new(:writekey => "YOUR_WRITE_KEY",
+honeycomb = Libhoney::Client.new(:writekey => ENV["HONEYCOMB_WRITEKEY"],
                                  :dataset => "honeycomb-ruby-example")
 
 honeycomb.send_now({
