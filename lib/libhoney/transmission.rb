@@ -91,12 +91,20 @@ module Libhoney
     end
 
     private
-    def do_send(event)
-      conn = Faraday.new(:url => event.api_host) do |faraday|
-        faraday.request  :json
-        faraday.adapter  :net_http_persistent
-      end
 
+    def connection(event)
+      @connections ||= {}
+      return @connections[event.api_host] if @connections[event.api_host]
+
+      # Memoize the faraday client so there's only one per api_host
+      @connections[event.api_host] = Faraday.new(:url => event.api_host) do |faraday|
+        faraday.request :json
+        faraday.adapter Faraday.default_adapter
+      end
+    end
+
+    def do_send(event)
+      conn = connection(event)
       resp = conn.post do |req|
         req.url '/1/events/' + event.dataset
         req.headers = {

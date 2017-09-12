@@ -31,5 +31,4 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bump", "~> 0.5"
   spec.add_dependency "faraday", "~> 0.12"
   spec.add_dependency "faraday_middleware", "~> 0.12"
-  spec.add_dependency "net-http-persistent", "~> 3.0"
 end
