@@ -18,6 +18,8 @@ gem 'libhoney'
 #gem 'libhoney', git: 'https://github.com/honeycombio/libhoney-rb.git'
 ```
 
+N.B. that libhoney requires Ruby 2.2 or greater.
+
 ## Documentation
 
 An API reference is available at http://www.rubydoc.info/gems/libhoney
