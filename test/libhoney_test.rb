@@ -71,12 +71,12 @@ class LibhoneyBuilderTest < Minitest::Test
     # but only up to the point where the sub builder was created
     @honey.add_field('argle2', 'bargle2')
     event = builder.event()
-    assert_equal nil, event.data['argle2']
+    assert_nil event.data['argle2']
 
     # and fields added to the sub builder aren't accessible in the root builder
     builder.add_field('argle3', 'bargle3')
     event = @honey.event()
-    assert_equal nil, event.data['argle3']
+    assert_nil event.data['argle3']
   end
 
   def test_dynamic_fields
