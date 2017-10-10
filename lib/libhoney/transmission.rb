@@ -57,12 +57,7 @@ module Libhoney
             'X-Event-Time' => e.timestamp.iso8601
           ).post(URI.join(e.api_host, '/1/events/', e.dataset), :json => e.data)
 
-          after = Time.now
-          response = Response.new(
-            :duration => after - before,
-            :status_code => resp.status,
-            :metadata => e.metadata
-          )
+          response = Response.new(:status_code => resp.status)
         rescue Exception => error
           # catch a broader swath of exceptions than is usually good practice,
           # because this is effectively the top-level exception handler for the
