@@ -1,11 +1,11 @@
 module Libhoney
   ##
   # This is the event object that you can fill up with data.
-  # The data itself is a ruby hash.
   class Event
     attr_accessor :writekey, :dataset, :sample_rate, :api_host
     attr_accessor :timestamp, :metadata
 
+    # @return [Hash<String=>any>] the fields in this event
     attr_reader :data
     
     # @api private
