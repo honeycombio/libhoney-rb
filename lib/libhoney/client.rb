@@ -53,12 +53,14 @@ module Libhoney
     # @param dataset [String] the dataset you want
     # @param sample_rate [Fixnum] cause libhoney to send 1 out of sampleRate events.  overrides the libhoney instance's value.
     # @param api_host [String] the base url to send events to
+    # @param transmission [Object] transport used to actually send events. If nil (the default), will be lazily initialized with a {TransmissionClient} on first event send.
     # @param block_on_send [Boolean] if more than pending_work_capacity events are written, block sending further events
     # @param block_on_responses [Boolean] if true, block if there is no thread reading from the response queue
     def initialize(writekey: '',
                    dataset: '',
                    sample_rate: 1,
                    api_host: 'https://api.honeycomb.io/',
+                   transmission: nil,
                    block_on_send: false,
                    block_on_responses: false,
                    max_batch_size: 50,
@@ -83,7 +85,7 @@ module Libhoney
       @max_concurrent_batches = max_concurrent_batches
       @pending_work_capacity = pending_work_capacity
       @responses = SizedQueue.new(2 * @pending_work_capacity)
-      @tx = nil
+      @tx = transmission
       @lock = Mutex.new
 
       self
@@ -203,6 +205,23 @@ module Libhoney
     def should_drop(sample_rate)
       rand(1..sample_rate) != 1
     end
+  end
 
+  # A client with the network stubbed out for testing purposes. Does not
+  # actually send any events to Honeycomb; instead, records events for later
+  # inspection.
+  #
+  # @note This class is intended for use in tests, for example if you want to
+  #       verify what events your instrumented code is sending. Use in
+  #       production is not recommended.
+  class TestClient < Client
+    def initialize(*args, **kwargs)
+      super(*args, transmission: MockTransmissionClient.new, **kwargs)
+    end
+
+    # @return [Array<Event>] the recorded events
+    def events
+      @tx.events
+    end
   end
 end
