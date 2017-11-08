@@ -1,11 +1,11 @@
 module Libhoney
   ##
   # This is the event object that you can fill up with data.
-  # The data itself is a ruby hash.
   class Event
     attr_accessor :writekey, :dataset, :sample_rate, :api_host
     attr_accessor :timestamp, :metadata
 
+    # @return [Hash<String=>any>] the fields in this event
     attr_reader :data
     
     # @api private
@@ -92,10 +92,6 @@ module Libhoney
     # @return [self] this event.
     def send_presampled
       raise ArgumentError.new("No metrics added to event. Won't send empty event.")         if self.data.length == 0
-      raise ArgumentError.new("No APIHost for Honeycomb. Can't send to the Great Unknown.") if self.api_host == ""
-      raise ArgumentError.new("No WriteKey specified. Can't send event.")                   if self.writekey == ""
-      raise ArgumentError.new("No Dataset for Honeycomb. Can't send datasetless.")          if self.dataset == ""
-
       @libhoney.send_event(self)
       self
     end

@@ -59,6 +59,34 @@ honeycomb.close
 
 You can find a more complete example demonstrating usage in [`example/fact.rb`](example/fact.rb)
 
+## Testing instrumented code
+
+Once you've instrumented your code to send events to Honeycomb, you may want to
+consider writing tests that verify your code is producing the events you expect,
+annotating them with the right information, etc. That way, if your code changes
+and breaks the instrumentation, you'll find out straight away, instead of at 3am
+when you need that data available for debugging!
+
+To support this use case, libhoney provides a
+[`TestClient`](http://www.rubydoc.info/gems/libhoney/Libhoney/TestClient) which
+you can swap in for the usual `Client`. Example usage:
+
+```ruby
+fakehoney = Libhoney::TestClient.new
+
+my_app = MyApp.new(..., fakehoney, ...)
+my_app.do_stuff
+
+expect(fakehoney.events.size).to eq 3
+
+first_event = fakehoney.events[0]
+expect(first_event.data['hovercraft_contents']).to eq 'Eels'
+```
+
+For more detail see the docs for
+[`TestClient`](http://www.rubydoc.info/gems/libhoney/Libhoney/TestClient) and
+[`Event`](http://www.rubydoc.info/gems/libhoney/Libhoney/Event).
+
 ## Contributions
 
 Features, bug fixes and other changes to libhoney are gladly accepted. Please
