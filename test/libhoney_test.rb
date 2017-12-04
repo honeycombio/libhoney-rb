@@ -63,7 +63,7 @@ class LibhoneyBuilderTest < Minitest::Test
     assert_equal '5678', builder.dataset
     assert_equal 4, builder.sample_rate
     assert_equal 'http://builder.host', builder.api_host
-    
+
     # events from the sub-builder should include all root builder fields
     event = builder.event()
     assert_equal 'bargle', event.data['argle']
@@ -123,7 +123,7 @@ class LibhoneyEventTest < Minitest::Test
     assert_equal 10, @event.sample_rate
     assert_equal t, @event.timestamp
   end
-  
+
   def test_timestamp_is_time
     assert_instance_of Time, @event.timestamp
   end
@@ -182,7 +182,7 @@ class LibhoneyTest < Minitest::Test
 
     assert_requested :post, 'https://api.honeycomb.io/1/events/mydataset', times: 1
   end
-  
+
   def test_close
     numtests = 900
 
@@ -278,5 +278,18 @@ class LibhoneyTest < Minitest::Test
     assert_equal(200, response.status_code)
 
     @honey.close
+  end
+
+  def test_dataset_quoting
+    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset%20send').
+      to_return(:status => 200, :body => 'OK')
+
+    e = @honey.event
+    e.dataset = "mydataset send"
+    e.add({'argle' => 'bargle'})
+    e.send
+    @honey.close
+
+    assert_requested :post, 'https://api.honeycomb.io/1/events/mydataset%20send'
   end
 end

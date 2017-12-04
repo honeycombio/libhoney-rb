@@ -59,7 +59,7 @@ module Libhoney
             'X-Honeycomb-Team' => e.writekey,
             'X-Honeycomb-SampleRate' => e.sample_rate,
             'X-Event-Time' => e.timestamp.iso8601
-          ).post(URI.join(e.api_host, '/1/events/', e.dataset), :json => e.data)
+          ).post(URI.join(e.api_host, '/1/events/', URI.escape(e.dataset)), :json => e.data)
 
           response = Response.new(:status_code => resp.status)
         rescue Exception => error
