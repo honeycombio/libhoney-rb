@@ -145,7 +145,7 @@ module Libhoney
     # @param fn [#call] function that will be called to generate the value whenever an event is created.
     # @return [self] this libhoney instance.
     # @example
-    #   honey.addDynamicField("active_threads", Proc.new { Thread.list.select {|thread| thread.status == "run"}.count })
+    #   honey.add_dynamic_field("active_threads", Proc.new { Thread.list.select {|thread| thread.status == "run"}.count })
     def add_dynamic_field(name, fn)
       @builder.add_dynamic_field(name, fn)
       self
@@ -155,10 +155,10 @@ module Libhoney
     #
     # @param data [Hash<String=>any>] optional field->value mapping to add to the event sent.
     # @return [self] this libhoney instance.
-    # @example empty sendNow
-    #   honey.sendNow() # sends just the data that has been added via add/add_field/add_dynamic_field.
+    # @example empty send_now
+    #   honey.send_now() # sends just the data that has been added via add/add_field/add_dynamic_field.
     # @example adding data at send-time
-    #   honey.sendNow {
+    #   honey.send_now {
     #     additionalField: value
     #   }
     #/
