@@ -1,4 +1,5 @@
 require "bundler/gem_tasks"
+require 'yard'
 
 require "rake/testtask"
 Rake::TestTask.new(:test) do |t|
@@ -6,6 +7,8 @@ Rake::TestTask.new(:test) do |t|
   t.libs << "lib"
   t.test_files = FileList['test/**/*_test.rb']
 end
+
+YARD::Rake::YardocTask.new(:doc)
 
 require "yardstick/rake/measurement"
 Yardstick::Rake::Measurement.new do |measurement|
