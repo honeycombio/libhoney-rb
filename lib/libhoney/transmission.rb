@@ -9,7 +9,8 @@ module Libhoney
                    pending_work_capacity: 0,
                    responses: 0,
                    block_on_send: 0,
-                   block_on_responses: 0)
+                   block_on_responses: 0,
+                   user_agent_addition: nil)
 
       @responses = responses
       @block_on_send = block_on_send
@@ -18,6 +19,8 @@ module Libhoney
       @send_frequency = send_frequency
       @max_concurrent_batches = max_concurrent_batches
       @pending_work_capacity = pending_work_capacity
+
+      @user_agent = build_user_agent(user_agent_addition).freeze
 
       # use a SizedQueue so the producer will block on adding to the send_queue when @block_on_send is true
       @send_queue = SizedQueue.new(@pending_work_capacity)
@@ -54,7 +57,7 @@ module Libhoney
 
         begin
           resp = HTTP.headers(
-            'User-Agent' => "libhoney-rb/#{VERSION}",
+            'User-Agent' => @user_agent,
             'Content-Type' => 'application/json',
             'X-Honeycomb-Team' => e.writekey,
             'X-Honeycomb-SampleRate' => e.sample_rate,
@@ -96,6 +99,13 @@ module Libhoney
       @responses.enq(nil)
 
       0
+    end
+
+    private
+    def build_user_agent(user_agent_addition)
+      ua = "libhoney-rb/#{VERSION}"
+      ua << " #{user_agent_addition}" if user_agent_addition
+      ua
     end
   end
 end

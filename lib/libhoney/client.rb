@@ -60,6 +60,7 @@ module Libhoney
                    dataset: '',
                    sample_rate: 1,
                    api_host: 'https://api.honeycomb.io/',
+                   user_agent_addition: nil,
                    transmission: nil,
                    block_on_send: false,
                    block_on_responses: false,
@@ -77,6 +78,8 @@ module Libhoney
       @builder.dataset = dataset
       @builder.sample_rate = sample_rate
       @builder.api_host = api_host
+
+      @user_agent_addition = user_agent_addition
 
       @block_on_send = block_on_send
       @block_on_responses = block_on_responses
@@ -183,7 +186,8 @@ module Libhoney
                                        :pending_work_capacity => @pending_work_capacity,
                                        :responses => @responses,
                                        :block_on_send => @block_on_send,
-                                       :block_on_responses => @block_on_responses)
+                                       :block_on_responses => @block_on_responses,
+                                       :user_agent_addition => @user_agent_addition)
         end
       }
 
