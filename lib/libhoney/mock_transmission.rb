@@ -8,7 +8,7 @@ module Libhoney
   #       production is not recommended.
   class MockTransmissionClient
     def initialize
-      @events = []
+      reset
     end
 
     # @return [Array<Event>] the recorded events
@@ -21,6 +21,11 @@ module Libhoney
 
     # Does nothing.
     def close(drain)
+    end
+
+    # Discards the recorded events
+    def reset
+      @events = []
     end
   end
 end

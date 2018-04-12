@@ -227,5 +227,10 @@ module Libhoney
     def events
       @tx.events
     end
+
+    # Discards the recorded events
+    def reset
+      @tx.reset
+    end
   end
 end
