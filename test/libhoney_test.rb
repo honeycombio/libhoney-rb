@@ -296,21 +296,21 @@ end
 
 class LibhoneyUserAgentTest < Minitest::Test
   def setup
-    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset').
+    stub_request(:post, 'https://api.honeycomb.io/1/events/somedataset').
       to_return(status: 200, body: 'OK')
   end
 
   def test_default_user_agent
-    honey = Libhoney::Client.new(writekey: 'mywritekey', dataset: 'mydataset')
+    honey = Libhoney::Client.new(writekey: 'mywritekey', dataset: 'somedataset')
     honey.send_now('ORLY' => 'YA RLY')
     honey.close
-    assert_requested :post, /.*/, headers: {'User-Agent': "libhoney-rb/#{::Libhoney::VERSION}"}
+    assert_requested :post, 'https://api.honeycomb.io/1/events/somedataset', headers: {'User-Agent': "libhoney-rb/#{::Libhoney::VERSION}"}
   end
 
   def test_user_agent_addition
-    honey = Libhoney::Client.new(writekey: 'mywritekey', dataset: 'mydataset', user_agent_addition: 'test/4.2')
+    honey = Libhoney::Client.new(writekey: 'mywritekey', dataset: 'somedataset', user_agent_addition: 'test/4.2')
     honey.send_now('ORLY' => 'YA RLY')
     honey.close
-    assert_requested :post, /.*/, headers: {'User-Agent': %r{libhoney-rb/.* test/4.2}}
+    assert_requested :post, 'https://api.honeycomb.io/1/events/somedataset', headers: {'User-Agent': %r{libhoney-rb/.* test/4.2}}
   end
 end
