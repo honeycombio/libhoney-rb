@@ -61,7 +61,7 @@ module Libhoney
             'Content-Type' => 'application/json',
             'X-Honeycomb-Team' => e.writekey,
             'X-Honeycomb-SampleRate' => e.sample_rate,
-            'X-Event-Time' => e.timestamp.iso8601
+            'X-Event-Time' => e.timestamp.iso8601(3)
           ).post(URI.join(e.api_host, '/1/events/', URI.escape(e.dataset)), :json => e.data)
 
           response = Response.new(:status_code => resp.status)
