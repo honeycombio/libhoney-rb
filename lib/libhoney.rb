@@ -1,4 +1,5 @@
 require 'libhoney/client'
+require 'libhoney/test_client'
 require 'libhoney/version'
 require 'libhoney/builder'
 require 'libhoney/response'
