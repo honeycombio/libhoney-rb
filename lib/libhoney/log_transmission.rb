@@ -1,0 +1,34 @@
+require 'json'
+
+module Libhoney
+  # For debugging use: a mock version of TransmissionClient that simply prints
+  # events to stderr or a file for inspection (and does not send them to
+  # Honeycomb, or perform any network activity).
+  #
+  # @note This class is intended for use in development, for example if you want
+  #       to verify what events your instrumented code is sending. Use in
+  #       production is not recommended.
+  class LogTransmissionClient
+    def initialize(output:, verbose: false)
+      @output = output
+      @verbose = verbose
+    end
+
+    # Prints an event
+    def add(event)
+      if @verbose
+        metadata = "Honeycomb dataset '#{event.dataset}' | #{event.timestamp.iso8601}"
+        if event.sample_rate != 1
+          metadata << " (sample rate: #{event.sample_rate})"
+        end
+        @output.print("#{metadata} | ")
+      end
+      @output.puts(event.data.to_json)
+    end
+
+    # Flushes the output (but does not close it)
+    def close(drain)
+      @output.flush
+    end
+  end
+end

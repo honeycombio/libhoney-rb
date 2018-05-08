@@ -61,6 +61,27 @@ Check out the documentation for [`Libhoney::Client`](http://www.rubydoc.info/gem
 
 You can find a more complete example demonstrating usage in [`example/fact.rb`](example/fact.rb)
 
+## Debugging instrumentation
+
+If you've instrumented your code to send events to Honeycomb, you may want to
+verify that you're sending the events you expected at the right time with the
+desired fields. To support this use case, libhoney provides a
+[`LogClient`](http://www.rubydoc.info/gems/libhoney/Libhoney/LogClient) that
+outputs events to standard error, which you can swap in for the usual `Client`.
+Example usage:
+
+```ruby
+honeycomb = Libhoney::LogClient.new
+
+my_app = MyApp.new(..., honeycomb, ...)
+my_app.do_stuff
+# should output events to standard error
+```
+
+Note that this will disable sending events to Honeycomb, so you'll want to
+revert this change once you've verified that the events are coming through
+appropriately.
+
 ## Testing instrumented code
 
 Once you've instrumented your code to send events to Honeycomb, you may want to
