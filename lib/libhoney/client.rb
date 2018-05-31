@@ -3,6 +3,8 @@ require 'time'
 require 'json'
 require 'http'
 
+require 'libhoney/null_transmission'
+
 # define a few additions that proxy access through Client's builder.  makes Client much tighter.
 class Class
   def builder_attr_accessor(*args)
@@ -38,8 +40,8 @@ module Libhoney
   #   honey.close
   #
   # Arguments:
-  # * *writekey* is the key to use the Honeycomb service
-  # * *dataset* is the dataset to write into
+  # * *writekey* is the key to use the Honeycomb service (required)
+  # * *dataset* is the dataset to write into (required)
   # * *sample_rate* is how many samples you want to keep.  IE:  1 means you want 1 out of 1 samples kept, or all of them.  10 means you want 1 out of 10 samples kept.  And so on.
   # * *url* is the url to connect to Honeycomb
   # * *num_workers* is the number of threads working on the queue of events you are generating
@@ -49,15 +51,15 @@ module Libhoney
   class Client
     # Instantiates libhoney and prepares it to send events to Honeycomb.
     #
-    # @param writekey [String] the write key from your honeycomb team
-    # @param dataset [String] the dataset you want
+    # @param writekey [String] the write key from your honeycomb team (required)
+    # @param dataset [String] the dataset you want (required)
     # @param sample_rate [Fixnum] cause libhoney to send 1 out of sampleRate events.  overrides the libhoney instance's value.
     # @param api_host [String] the base url to send events to
     # @param transmission [Object] transport used to actually send events. If nil (the default), will be lazily initialized with a {TransmissionClient} on first event send.
     # @param block_on_send [Boolean] if more than pending_work_capacity events are written, block sending further events
     # @param block_on_responses [Boolean] if true, block if there is no thread reading from the response queue
-    def initialize(writekey: '',
-                   dataset: '',
+    def initialize(writekey: nil,
+                   dataset: nil,
                    sample_rate: 1,
                    api_host: 'https://api.honeycomb.io/',
                    user_agent_addition: nil,
@@ -79,6 +81,18 @@ module Libhoney
       @builder.sample_rate = sample_rate
       @builder.api_host = api_host
 
+      @tx = transmission
+      if !@tx && !(writekey && dataset)
+        # if no writekey or dataset are configured, and we didn't override the
+        # transmission (e.g. to a MockTransmissionClient), that's almost
+        # certainly a misconfiguration, even though it's possible to override
+        # them on a per-event basis. So let's handle the misconfiguration
+        # early rather than potentially throwing thousands of exceptions at
+        # runtime.
+        warn "#{self.class.name}: no #{writekey ? 'dataset' : 'writekey'} configured, disabling sending events"
+        @tx = NullTransmissionClient.new
+      end
+
       @user_agent_addition = user_agent_addition
 
       @block_on_send = block_on_send
@@ -88,7 +102,6 @@ module Libhoney
       @max_concurrent_batches = max_concurrent_batches
       @pending_work_capacity = pending_work_capacity
       @responses = SizedQueue.new(2 * @pending_work_capacity)
-      @tx = transmission
       @lock = Mutex.new
 
       self
