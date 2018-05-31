@@ -4,10 +4,20 @@ require 'libhoney'
 require 'webmock/minitest'
 
 class LibhoneyDefaultTest < Minitest::Test
+  def setup
+    # intercept warning emitted for missing writekey
+    @old_stderr = $stderr
+    $stderr = StringIO.new
+  end
+  def teardown
+    $stderr = @old_stderr
+  end
+
   def test_initialize
     honey = Libhoney::Client.new()
-    assert_equal '', honey.writekey
-    assert_equal '', honey.dataset
+    assert_nil honey.writekey
+    assert_nil honey.dataset
+    assert_match(/writekey/, $stderr.string, 'should log a warning due to missing writekey')
     assert_equal 1, honey.sample_rate
     assert_equal 'https://api.honeycomb.io/', honey.api_host
     assert_equal false, honey.block_on_send
