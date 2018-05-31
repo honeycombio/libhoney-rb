@@ -1,4 +1,5 @@
 require 'libhoney/client'
+require 'libhoney/log_transmission'
 
 module Libhoney
 

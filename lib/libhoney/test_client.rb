@@ -1,4 +1,5 @@
 require 'libhoney/client'
+require 'libhoney/mock_transmission'
 
 module Libhoney
 
