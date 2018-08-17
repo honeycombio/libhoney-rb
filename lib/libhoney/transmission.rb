@@ -83,12 +83,14 @@ module Libhoney
           # nothing consuming the queue).
           response = Response.new(:error => error)
         ensure
-          response.duration = Time.now - before
-          response.metadata = e.metadata
+          if response
+            response.duration = Time.now - before
+            response.metadata = e.metadata
+          end
         end
 
         begin
-          @responses.enq(response, !@block_on_responses)
+          @responses.enq(response, !@block_on_responses) if response
         rescue ThreadError
           # happens if the queue was full and block_on_send = false.
         end
