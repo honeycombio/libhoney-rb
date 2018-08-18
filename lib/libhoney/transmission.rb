@@ -48,11 +48,10 @@ module Libhoney
     end
 
     def send_loop
-      http_clients = Hash.new do |h, (api_host, writekey)|
-        h[[api_host, writekey]] = HTTP.persistent(api_host).headers(
+      http_clients = Hash.new do |h, api_host|
+        h[api_host] = HTTP.persistent(api_host).headers(
             'User-Agent' => @user_agent,
             'Content-Type' => 'application/json',
-            'X-Honeycomb-Team' => writekey,
         )
       end
 
@@ -64,9 +63,10 @@ module Libhoney
         before = Time.now
 
         begin
-          http = http_clients[[e.api_host, e.writekey]]
+          http = http_clients[e.api_host]
 
           resp = http.post('/1/events/'+URI.escape(e.dataset), json: e.data, headers: {
+            'X-Honeycomb-Team' => e.writekey,
             'X-Honeycomb-SampleRate' => e.sample_rate,
             'X-Event-Time' => e.timestamp.iso8601(3)
           })
