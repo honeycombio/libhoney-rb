@@ -48,6 +48,13 @@ module Libhoney
     end
 
     def send_loop
+      http_clients = Hash.new do |h, api_host|
+        h[api_host] = HTTP.persistent(api_host).headers(
+            'User-Agent' => @user_agent,
+            'Content-Type' => 'application/json',
+        )
+      end
+
       # eat events until we run out
       loop {
         e = @send_queue.pop
@@ -56,13 +63,17 @@ module Libhoney
         before = Time.now
 
         begin
-          resp = HTTP.headers(
-            'User-Agent' => @user_agent,
-            'Content-Type' => 'application/json',
+          http = http_clients[e.api_host]
+
+          resp = http.post('/1/events/'+URI.escape(e.dataset), json: e.data, headers: {
             'X-Honeycomb-Team' => e.writekey,
             'X-Honeycomb-SampleRate' => e.sample_rate,
             'X-Event-Time' => e.timestamp.iso8601(3)
-          ).post(URI.join(e.api_host, '/1/events/', URI.escape(e.dataset)), :json => e.data)
+          })
+
+          # "You must consume response before sending next request via persistent connection"
+          # https://github.com/httprb/http/wiki/Persistent-Connections-%28keep-alive%29#note-using-persistent-requests-correctly
+          resp.flush
 
           response = Response.new(:status_code => resp.status)
         rescue Exception => error
@@ -72,16 +83,22 @@ module Libhoney
           # nothing consuming the queue).
           response = Response.new(:error => error)
         ensure
-          response.duration = Time.now - before
-          response.metadata = e.metadata
+          if response
+            response.duration = Time.now - before
+            response.metadata = e.metadata
+          end
         end
 
         begin
-          @responses.enq(response, !@block_on_responses)
+          @responses.enq(response, !@block_on_responses) if response
         rescue ThreadError
           # happens if the queue was full and block_on_send = false.
         end
       }
+    ensure
+      http_clients.each do |_, http|
+        http.close rescue nil
+      end
     end
 
     def close(drain)
