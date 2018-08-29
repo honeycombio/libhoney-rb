@@ -3,16 +3,16 @@ require 'libhoney/response'
 module Libhoney
   # @api private
   class TransmissionClient
-    def initialize(max_batch_size: 0,
-                   send_frequency: 0,
-                   max_concurrent_batches: 0,
-                   pending_work_capacity: 0,
-                   responses: 0,
-                   block_on_send: 0,
-                   block_on_responses: 0,
+    def initialize(max_batch_size: 50,
+                   send_frequency: 100,
+                   max_concurrent_batches: 10,
+                   pending_work_capacity: 1000,
+                   responses: nil,
+                   block_on_send: false,
+                   block_on_responses: false,
                    user_agent_addition: nil)
 
-      @responses = responses
+      @responses = responses || SizedQueue.new(pending_work_capacity * 2)
       @block_on_send = block_on_send
       @block_on_responses = block_on_responses
       @max_batch_size = max_batch_size
