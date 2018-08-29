@@ -10,12 +10,13 @@ To install the stable release:
 gem install libhoney
 ```
 
-or add `libhoney` to your Gemfile:
+or add `libhoney` to your `Gemfile`:
 
-```
+```ruby
 gem 'libhoney'
+
 # or, to follow the bleeding edge:
-#gem 'libhoney', git: 'https://github.com/honeycombio/libhoney-rb.git'
+# gem 'libhoney', git: 'https://github.com/honeycombio/libhoney-rb.git'
 ```
 
 This gem has some native dependencies, so if you see an error along the lines of "Failed to build gem native extension", you may need to install the Ruby development headers and a C++ compiler. e.g. on Ubuntu:
@@ -24,12 +25,12 @@ This gem has some native dependencies, so if you see an error along the lines of
 sudo apt-get install build-essential ruby-dev
 ```
 
-Note that libhoney requires Ruby 2.2 or greater.
+Note that `libhoney` requires Ruby 2.2 or greater.
 
 
 ## Documentation
 
-An API reference is available at http://www.rubydoc.info/gems/libhoney
+An API reference is available at [rubydoc.info/gems/libhoney](http://www.rubydoc.info/gems/libhoney).
 
 ## Example Usage
 
@@ -41,15 +42,15 @@ require 'libhoney'
 # Create a client instance
 honeycomb = Libhoney::Client.new(
   # Use an environment variable to set your write key with something like
-  #   `:writekey => ENV["HONEYCOMB_WRITEKEY"]`
-  :writekey =>  "YOUR_WRITE_KEY",
-  :dataset => "honeycomb-ruby-example"
+  # `writekey: ENV['HONEYCOMB_WRITEKEY']`,
+  writekey: 'YOUR_WRITE_KEY',
+  dataset:  'honeycomb-ruby-example'
 )
 
 honeycomb.send_now({
-  duration_ms: 153.12,
-  method: "get",
-  hostname: "appserver15",
+  duration_ms:    153.12,
+  method:         'get',
+  hostname:       'appserver15',
   payload_length: 27
 })
 
@@ -65,7 +66,7 @@ You can find a more complete example demonstrating usage in [`example/fact.rb`](
 
 If you've instrumented your code to send events to Honeycomb, you may want to
 verify that you're sending the events you expected at the right time with the
-desired fields. To support this use case, libhoney provides a
+desired fields. To support this use case, `libhoney` provides a
 [`LogClient`](http://www.rubydoc.info/gems/libhoney/Libhoney/LogClient) that
 outputs events to standard error, which you can swap in for the usual `Client`.
 Example usage:
@@ -75,6 +76,7 @@ honeycomb = Libhoney::LogClient.new
 
 my_app = MyApp.new(..., honeycomb, ...)
 my_app.do_stuff
+
 # should output events to standard error
 ```
 
@@ -90,7 +92,7 @@ annotating them with the right information, etc. That way, if your code changes
 and breaks the instrumentation, you'll find out straight away, instead of at 3am
 when you need that data available for debugging!
 
-To support this use case, libhoney provides a
+To support this use case, `libhoney` provides a
 [`TestClient`](http://www.rubydoc.info/gems/libhoney/Libhoney/TestClient) which
 you can swap in for the usual `Client`. Example usage:
 
@@ -112,7 +114,7 @@ For more detail see the docs for
 
 ## Contributions
 
-Features, bug fixes and other changes to libhoney are gladly accepted. Please
+Features, bug fixes and other changes to `libhoney` are gladly accepted. Please
 open issues or a pull request with your change. Remember to add your name to the
 CONTRIBUTORS file!
 
