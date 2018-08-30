@@ -39,12 +39,7 @@ module Libhoney
         # happens if the queue was full and block_on_send = false.
       end
 
-      @lock.synchronize {
-        return if @threads.length > 0
-        while @threads.length < @max_concurrent_batches
-          @threads << Thread.new { self.send_loop }
-        end
-      }
+      ensure_threads_running
     end
 
     def send_loop
@@ -123,6 +118,15 @@ module Libhoney
       ua = "libhoney-rb/#{VERSION}"
       ua << " #{user_agent_addition}" if user_agent_addition
       ua
+    end
+
+    def ensure_threads_running
+      @lock.synchronize {
+        @threads.select!(&:alive?)
+        while @threads.length < @max_concurrent_batches
+          @threads << Thread.new { self.send_loop }
+        end
+      }
     end
   end
 end
