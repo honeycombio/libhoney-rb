@@ -50,6 +50,8 @@ module Libhoney
   # Note that by default, the max queue size is 1000.  If the queue gets bigger than that, we start dropping events.
   #
   class Client
+    API_HOST = 'https://api.honeycomb.io/'.freeze
+
     # Instantiates libhoney and prepares it to send events to Honeycomb.
     #
     # @param writekey [String] the write key from your honeycomb team (required)
@@ -62,7 +64,7 @@ module Libhoney
     def initialize(writekey: nil,
                    dataset: nil,
                    sample_rate: 1,
-                   api_host: 'https://api.honeycomb.io/',
+                   api_host: API_HOST,
                    user_agent_addition: nil,
                    transmission: nil,
                    block_on_send: false,
@@ -80,10 +82,11 @@ module Libhoney
       end
 
       @builder = Builder.new(self, nil)
-      @builder.writekey = writekey
-      @builder.dataset = dataset
+
+      @builder.writekey    = writekey
+      @builder.dataset     = dataset
       @builder.sample_rate = sample_rate
-      @builder.api_host = api_host
+      @builder.api_host    = api_host
 
       @tx = transmission
       if !@tx && !(writekey && dataset)
