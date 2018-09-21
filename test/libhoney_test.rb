@@ -102,8 +102,8 @@ class LibhoneyBuilderTest < Minitest::Test
   end
 
   def test_send_now
-    stub_request(:post, 'http://something.else/1/events/dataset').
-      to_return(:status => 200, :body => 'OK')
+    stub_request(:post, 'http://something.else/1/events/dataset')
+      .to_return(:status => 200, :body => 'OK')
 
     builder = @honey.builder
     builder.send_now({'argle' => 'bargle'})
@@ -162,8 +162,8 @@ class LibhoneyTest < Minitest::Test
     # do 900 so that we fit under the queue size and don't drop events
     numtests = 900
 
-    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-send').
-      to_return(:status => 200, :body => 'OK')
+    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-send')
+      .to_return(:status => 200, :body => 'OK')
 
     e = @honey.event
     e.dataset = "mydataset-send"
@@ -183,8 +183,8 @@ class LibhoneyTest < Minitest::Test
   end
 
   def test_send_now
-    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset').
-      to_return(:status => 200, :body => 'OK')
+    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset')
+      .to_return(:status => 200, :body => 'OK')
 
     @honey.send_now({'argle' => 'bargle'})
 
@@ -196,8 +196,8 @@ class LibhoneyTest < Minitest::Test
   def test_close
     numtests = 900
 
-    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-close').
-      to_return(:status => 200, :body => 'OK')
+    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-close')
+      .to_return(:status => 200, :body => 'OK')
 
     for i in 1..numtests
       e = @honey.event
@@ -211,8 +211,8 @@ class LibhoneyTest < Minitest::Test
   end
 
   def test_response_metadata
-    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-response_metadata').
-      to_return(:status => 200, :body => 'OK')
+    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-response_metadata')
+      .to_return(:status => 200, :body => 'OK')
 
     builder = @honey.builder
     builder.dataset = "mydataset-response_metadata"
@@ -267,9 +267,9 @@ class LibhoneyTest < Minitest::Test
   end
 
   def test_error_handling
-    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset').
-      to_raise('the network is dark and full of errors').times(20).
-      to_return(:status => 200, :body => 'OK')
+    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset')
+      .to_raise('the network is dark and full of errors').times(20)
+      .to_return(:status => 200, :body => 'OK')
 
     20.times do
       event = @honey.event
@@ -291,8 +291,8 @@ class LibhoneyTest < Minitest::Test
   end
 
   def test_dataset_quoting
-    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset%20send').
-      to_return(:status => 200, :body => 'OK')
+    stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset%20send')
+      .to_return(:status => 200, :body => 'OK')
 
     e = @honey.event
     e.dataset = "mydataset send"
@@ -306,8 +306,8 @@ end
 
 class LibhoneyUserAgentTest < Minitest::Test
   def setup
-    stub_request(:post, 'https://api.honeycomb.io/1/events/somedataset').
-      to_return(status: 200, body: 'OK')
+    stub_request(:post, 'https://api.honeycomb.io/1/events/somedataset')
+      .to_return(status: 200, body: 'OK')
   end
 
   def test_default_user_agent
