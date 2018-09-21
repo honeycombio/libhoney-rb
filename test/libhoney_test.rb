@@ -65,7 +65,7 @@ class LibhoneyBuilderTest < Minitest::Test
     @honey.add_field('argle', 'bargle')
 
     # create a new builder from the root builder
-    builder = @honey.builder()
+    builder = @honey.builder
     assert_equal 'writekey', builder.writekey
     assert_equal 'dataset', builder.dataset
     assert_equal 1, builder.sample_rate
@@ -76,24 +76,24 @@ class LibhoneyBuilderTest < Minitest::Test
     builder.dataset = '5678'
     builder.sample_rate = 4
     builder.api_host = 'http://builder.host'
-    event = builder.event()
+    event = builder.event
     assert_equal '1234', event.writekey
     assert_equal '5678', builder.dataset
     assert_equal 4, builder.sample_rate
     assert_equal 'http://builder.host', builder.api_host
 
     # events from the sub-builder should include all root builder fields
-    event = builder.event()
+    event = builder.event
     assert_equal 'bargle', event.data['argle']
 
     # but only up to the point where the sub builder was created
     @honey.add_field('argle2', 'bargle2')
-    event = builder.event()
+    event = builder.event
     assert_nil event.data['argle2']
 
     # and fields added to the sub builder aren't accessible in the root builder
     builder.add_field('argle3', 'bargle3')
-    event = @honey.event()
+    event = @honey.event
     assert_nil event.data['argle3']
   end
 
@@ -104,7 +104,7 @@ class LibhoneyBuilderTest < Minitest::Test
     proc = proc { 123 }
     @honey.add_dynamic_field('proc', proc)
 
-    event = @honey.event()
+    event = @honey.event
     assert_equal 42, event.data['lam']
     assert_equal 123, event.data['proc']
   end

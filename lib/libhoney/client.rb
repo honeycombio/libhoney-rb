@@ -176,7 +176,7 @@ module Libhoney
     # @param data [Hash<String=>any>] optional field->value mapping to add to the event sent.
     # @return [self] this libhoney instance.
     # @example empty send_now
-    #   honey.send_now() # sends just the data that has been added via add/add_field/add_dynamic_field.
+    #   honey.send_now # sends just the data that has been added via add/add_field/add_dynamic_field.
     # @example adding data at send-time
     #   honey.send_now {
     #     additionalField: value
