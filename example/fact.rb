@@ -46,13 +46,18 @@ Thread.new do
     libhoney.add_field("version", "3.4.5")
     libhoney.add_dynamic_field("num_threads", Proc.new { Thread.list.select {|thread| thread.status == "run"}.count })
 
-    # sends an event with "version", "num_threads", and "status" fields
-    libhoney.send_now({:status => "starting run"})
-    run_fact(1, 20, libhoney.builder({:range => "low"}))
-    run_fact(31, 40, libhoney.builder({:range => "high"}))
-
-    # sends an event with "version", "num_threads", and "status" fields
-    libhoney.send_now({:status => "ending run"})
+    ev = libhoney.event
+    ev.add_field("start_time", Time.now.iso8603(3))
+    ev.with_timer "run_fact_low_dur_ms" do
+      run_fact(1, 20, libhoney.builder({:range => "low"}))
+    end
+    ev.with_timer "run_fact_high_dur_ms" do
+      run_fact(31, 40, libhoney.builder({:range => "high"}))
+    end
+    ev.add_field("end_time", Time.now.iso8603(3))
+    # sends an event with "version", "num_threads", "start_time", "end_time",
+    # "run_fact_low_dur_ms", "run_fact_high_dur_ms"
+    ev.send
     libhoney.close
   rescue Exception => e
     puts e

@@ -67,7 +67,15 @@ module Libhoney
       @dyn_fields[name] = fn
     end
 
-    # creates and sends an event, including all builder fields/dyn_fields, as well as anything in the optional data parameter.
+    # @deprecated
+    # Creates and sends an event, including all global builder fields/dyn_fields, as well as anything in the optional data parameter.
+    #
+    # Equivalent to:
+    #   ev = builder.event
+    #   ev.add(data)
+    #   ev.send
+    #
+    # May be removed in a future major release
     #
     # @param data [Hash<String=>any>] optional field->value mapping to add to the event sent.
     # @return [self] this Builder instance
