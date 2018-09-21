@@ -31,12 +31,14 @@ end
 
 def read_responses(resp_queue)
   while resp = resp_queue.pop
-    puts "sending event with metadata #{resp.metadata} took #{resp.duration * 1000}ms and got response code #{resp.status_code}"
+    puts "Sent: Event with metadata #{resp.metadata} in #{resp.duration * 1000}ms."
+    puts "Got:  Response code #{resp.status_code}"
+    puts
   end
 end
 
 libhoney = Libhoney::Client.new(writekey: writekey,
-                                dataset: dataset,
+                                dataset:  dataset,
                                 max_concurrent_batches: 1)
 
 resps = libhoney.responses
@@ -44,7 +46,9 @@ Thread.new do
   begin
     # attach fields to top-level instance
     libhoney.add_field('version', '3.4.5')
-    libhoney.add_dynamic_field('num_threads', proc { Thread.list.select { |thread| thread.status == 'run' }.count })
+
+    a_proc = proc { Thread.list.select { |thread| thread.status == 'run' }.count }
+    libhoney.add_dynamic_field('num_threads', a_proc)
 
     # sends an event with "version", "num_threads", and "status" fields
     libhoney.send_now(status: 'starting run')

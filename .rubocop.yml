@@ -5,3 +5,9 @@ AllCops:
 
 Style/Documentation:
   Enabled: false
+
+Metrics/LineLength:
+  Max: 115
+  Exclude:
+    - lib/libhoney/client.rb
+    - lib/libhoney/builder.rb

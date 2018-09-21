@@ -29,8 +29,8 @@ module Libhoney
 
     def add(event)
       raise ArgumentError, "No APIHost for Honeycomb. Can't send to the Great Unknown." if event.api_host == ''
-      raise ArgumentError, "No WriteKey specified. Can't send event." if event.writekey == ''
-      raise ArgumentError, "No Dataset for Honeycomb. Can't send datasetless." if event.dataset == ''
+      raise ArgumentError, "No WriteKey specified. Can't send event."                   if event.writekey == ''
+      raise ArgumentError, "No Dataset for Honeycomb. Can't send datasetless."          if event.dataset  == ''
 
       begin
         @send_queue.enq(event, !@block_on_send)

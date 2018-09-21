@@ -119,7 +119,8 @@ end
 
 class LibhoneyEventTest < Minitest::Test
   def setup
-    @event = Libhoney::Client.new(writekey: 'Xwritekey', dataset: 'Xdataset', api_host: 'Xurl').event
+    params = { writekey: 'Xwritekey', dataset: 'Xdataset', api_host: 'Xurl' }
+    @event = Libhoney::Client.new(params).event
   end
 
   def test_overrides
@@ -315,13 +316,20 @@ class LibhoneyUserAgentTest < Minitest::Test
     honey = Libhoney::Client.new(writekey: 'mywritekey', dataset: 'somedataset')
     honey.send_now('ORLY' => 'YA RLY')
     honey.close
-    assert_requested :post, 'https://api.honeycomb.io/1/events/somedataset', headers: { 'User-Agent': "libhoney-rb/#{::Libhoney::VERSION}" }
+
+    assert_requested :post,
+                     'https://api.honeycomb.io/1/events/somedataset',
+                     headers: { 'User-Agent': "libhoney-rb/#{::Libhoney::VERSION}" }
   end
 
   def test_user_agent_addition
-    honey = Libhoney::Client.new(writekey: 'mywritekey', dataset: 'somedataset', user_agent_addition: 'test/4.2')
+    params = { writekey: 'mywritekey', dataset: 'somedataset', user_agent_addition: 'test/4.2' }
+    honey = Libhoney::Client.new(params)
     honey.send_now('ORLY' => 'YA RLY')
     honey.close
-    assert_requested :post, 'https://api.honeycomb.io/1/events/somedataset', headers: { 'User-Agent': %r{libhoney-rb/.* test/4.2} }
+
+    assert_requested :post,
+                     'https://api.honeycomb.io/1/events/somedataset',
+                     headers: { 'User-Agent': %r{libhoney-rb/.* test/4.2} }
   end
 end
