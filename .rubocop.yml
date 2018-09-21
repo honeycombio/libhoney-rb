@@ -6,12 +6,17 @@ AllCops:
 Style/Documentation:
   Enabled: false
 
+Metrics/ClassLength:
+  Exclude:
+    - test/*
+
+Metrics/MethodLength:
+  Max: 25
+  Exclude:
+    - lib/libhoney/transmission.rb
+
 Metrics/LineLength:
   Max: 115
   Exclude:
     - lib/libhoney/client.rb
     - lib/libhoney/builder.rb
-
-Metrics/ClassLength:
-  Exclude:
-    - test/*
