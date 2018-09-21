@@ -16,7 +16,7 @@ end
 
 # run factorial. libh_builder comes with some fields already populated
 # (namely, "version", "num_threads", and "range")
-def factorial(low, high, libh_builder)
+def run_factorial(low, high, libh_builder)
   (low..high).each do |i|
     event = libh_builder.event
     event.metadata = { fn: 'run_factorial', i: i }
