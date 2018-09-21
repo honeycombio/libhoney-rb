@@ -88,8 +88,8 @@ module Libhoney
       @builder.sample_rate = sample_rate
       @builder.api_host    = api_host
 
-      @tx = transmission
-      if !@tx && !(writekey && dataset)
+      @transmission = transmission
+      if !@transmission && !(writekey && dataset)
         # if no writekey or dataset are configured, and we didn't override the
         # transmission (e.g. to a MockTransmissionClient), that's almost
         # certainly a misconfiguration, even though it's possible to override
@@ -97,7 +97,7 @@ module Libhoney
         # early rather than potentially throwing thousands of exceptions at
         # runtime.
         warn "#{self.class.name}: no #{writekey ? 'dataset' : 'writekey'} configured, disabling sending events"
-        @tx = NullTransmissionClient.new
+        @transmission = NullTransmissionClient.new
       end
 
       @user_agent_addition = user_agent_addition
@@ -129,7 +129,7 @@ module Libhoney
     # Nuke the queue and wait for inflight requests to complete before returning.
     # If you set drain=false, all queued requests will be dropped on the floor.
     def close(drain = true)
-      return @tx.close(drain) if @tx
+      return @transmission.close(drain) if @transmission
 
       0
     end
@@ -197,7 +197,7 @@ module Libhoney
     # @api private
     def send_event(event)
       @lock.synchronize do
-        @tx ||= TransmissionClient.new(max_batch_size: @max_batch_size,
+        @transmission ||= TransmissionClient.new(max_batch_size: @max_batch_size,
                                        send_frequency: @send_frequency,
                                        max_concurrent_batches: @max_concurrent_batches,
                                        pending_work_capacity: @pending_work_capacity,
@@ -207,7 +207,7 @@ module Libhoney
                                        user_agent_addition: @user_agent_addition)
       end
 
-      @tx.add(event)
+      @transmission.add(event)
     end
 
     # @api private

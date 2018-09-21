@@ -16,12 +16,12 @@ module Libhoney
 
     # @return [Array<Event>] the recorded events
     def events
-      @tx.events
+      @transmission.events
     end
 
     # Discards the recorded events
     def reset
-      @tx.reset
+      @transmission.reset
     end
   end
 end
