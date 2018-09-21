@@ -54,7 +54,6 @@ Thread.new do
 
     a_proc = proc { Thread.list.select { |thread| thread.status == 'run' }.count }
     libhoney.add_dynamic_field('num_threads', a_proc)
-    puts a_proc.inspect
 
     # sends an event with "version", "num_threads", and "status" fields
     libhoney.send_now(status: 'starting run')
