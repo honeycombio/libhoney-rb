@@ -196,14 +196,18 @@ module Libhoney
     # @api private
     def send_event(event)
       @lock.synchronize do
-        @transmission ||= TransmissionClient.new(max_batch_size: @max_batch_size,
-                                       send_frequency: @send_frequency,
-                                       max_concurrent_batches: @max_concurrent_batches,
-                                       pending_work_capacity: @pending_work_capacity,
-                                       responses: @responses,
-                                       block_on_send: @block_on_send,
-                                       block_on_responses: @block_on_responses,
-                                       user_agent_addition: @user_agent_addition)
+        transmission_client_params = {
+          max_batch_size:         @max_batch_size,
+          send_frequency:         @send_frequency,
+          max_concurrent_batches: @max_concurrent_batches,
+          pending_work_capacity:  @pending_work_capacity,
+          responses:              @responses,
+          block_on_send:          @block_on_send,
+          block_on_responses:     @block_on_responses,
+          user_agent_addition:    @user_agent_addition
+        }
+
+        @transmission ||= TransmissionClient.new(transmission_client_params)
       end
 
       @transmission.add(event)
