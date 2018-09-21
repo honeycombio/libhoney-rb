@@ -97,16 +97,14 @@ module Libhoney
 
       @user_agent_addition = user_agent_addition
 
-      @block_on_send = block_on_send
-      @block_on_responses = block_on_responses
-      @max_batch_size = max_batch_size
-      @send_frequency = send_frequency
+      @block_on_send          = block_on_send
+      @block_on_responses     = block_on_responses
+      @max_batch_size         = max_batch_size
+      @send_frequency         = send_frequency
       @max_concurrent_batches = max_concurrent_batches
-      @pending_work_capacity = pending_work_capacity
-      @responses = SizedQueue.new(2 * @pending_work_capacity)
-      @lock = Mutex.new
-
-      self
+      @pending_work_capacity  = pending_work_capacity
+      @responses              = SizedQueue.new(2 * @pending_work_capacity)
+      @lock                   = Mutex.new
     end
 
     builder_attr_accessor :writekey, :dataset, :sample_rate, :api_host
@@ -123,7 +121,6 @@ module Libhoney
       @builder.builder(fields, dyn_fields)
     end
 
-    ##
     # Nuke the queue and wait for inflight requests to complete before returning.
     # If you set drain=false, all queued requests will be dropped on the floor.
     def close(drain = true)

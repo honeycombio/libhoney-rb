@@ -12,20 +12,19 @@ module Libhoney
                    block_on_responses: false,
                    user_agent_addition: nil)
 
-      @responses = responses || SizedQueue.new(pending_work_capacity * 2)
-      @block_on_send = block_on_send
-      @block_on_responses = block_on_responses
-      @max_batch_size = max_batch_size
-      @send_frequency = send_frequency
+      @responses              = responses || SizedQueue.new(pending_work_capacity * 2)
+      @block_on_send          = block_on_send
+      @block_on_responses     = block_on_responses
+      @max_batch_size         = max_batch_size
+      @send_frequency         = send_frequency
       @max_concurrent_batches = max_concurrent_batches
-      @pending_work_capacity = pending_work_capacity
-
-      @user_agent = build_user_agent(user_agent_addition).freeze
+      @pending_work_capacity  = pending_work_capacity
+      @user_agent             = build_user_agent(user_agent_addition).freeze
 
       # use a SizedQueue so the producer will block on adding to the send_queue when @block_on_send is true
       @send_queue = SizedQueue.new(@pending_work_capacity)
-      @threads = []
-      @lock = Mutex.new
+      @threads    = []
+      @lock       = Mutex.new
     end
 
     def add(event)

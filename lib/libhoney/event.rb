@@ -12,20 +12,17 @@ module Libhoney
     # @see Client#event
     # @see Builder#event
     def initialize(libhoney, builder, fields = {}, dyn_fields = {})
-      @libhoney = libhoney
-
-      @writekey = builder.writekey
-      @dataset = builder.dataset
+      @libhoney    = libhoney
+      @writekey    = builder.writekey
+      @dataset     = builder.dataset
       @sample_rate = builder.sample_rate
-      @api_host = builder.api_host
-      @timestamp = Time.now
-      @metadata = nil
+      @api_host    = builder.api_host
+      @timestamp   = Time.now
+      @metadata    = nil
 
       @data = {}
       fields.each { |k, v| add_field(k, v) }
       dyn_fields.each { |k, v| add_field(k, v.call) }
-
-      self
     end
 
     # adds a group of field->values to this event.

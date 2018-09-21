@@ -6,10 +6,10 @@ module Libhoney
                    status_code: 0,
                    metadata: nil,
                    error: nil)
-      @duration = duration
+      @duration    = duration
       @status_code = status_code
-      @metadata = metadata
-      @error = error
+      @metadata    = metadata
+      @error       = error
     end
   end
 end

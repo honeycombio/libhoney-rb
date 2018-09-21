@@ -16,14 +16,6 @@ Lint/RescueException:
     - 'example/fact.rb'
     - 'lib/libhoney/transmission.rb'
 
-# Offense count: 3
-# Configuration parameters: CheckForMethodsWithNoSideEffects.
-Lint/Void:
-  Exclude:
-    - 'lib/libhoney/builder.rb'
-    - 'lib/libhoney/client.rb'
-    - 'lib/libhoney/event.rb'
-
 # Offense count: 6
 Metrics/AbcSize:
   Max: 45

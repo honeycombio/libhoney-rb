@@ -10,7 +10,7 @@ module Libhoney
   #       production is not recommended.
   class LogTransmissionClient
     def initialize(output:, verbose: false)
-      @output = output
+      @output  = output
       @verbose = verbose
     end
 

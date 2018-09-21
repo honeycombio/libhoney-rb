@@ -11,21 +11,21 @@ module Libhoney
     def initialize(libhoney, parent_builder, fields = {}, dyn_fields = {})
       @libhoney = libhoney
 
-      @fields = {}
+      @fields     = {}
       @dyn_fields = {}
 
       unless parent_builder.nil?
-        @writekey = parent_builder.writekey
-        @dataset = parent_builder.dataset
+        @writekey    = parent_builder.writekey
+        @dataset     = parent_builder.dataset
         @sample_rate = parent_builder.sample_rate
-        @api_host = parent_builder.api_host
+        @api_host    = parent_builder.api_host
+
         @fields.merge!(parent_builder.fields)
         @dyn_fields.merge!(parent_builder.dyn_fields)
       end
 
       @fields.merge!(fields)
       @dyn_fields.merge!(dyn_fields)
-      self
     end
 
     # adds a group of field->values to the events created from this builder.
