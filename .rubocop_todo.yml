@@ -54,8 +54,3 @@ Metrics/ParameterLists:
 # Offense count: 1
 Metrics/PerceivedComplexity:
   Max: 8
-
-# Offense count: 4
-Style/EvalWithLocation:
-  Exclude:
-    - 'lib/libhoney/client.rb'

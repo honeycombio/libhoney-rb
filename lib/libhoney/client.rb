@@ -8,20 +8,20 @@ require 'libhoney/null_transmission'
 class Class
   def builder_attr_accessor(*args)
     args.each do |arg|
-      class_eval("def #{arg};@builder.#{arg};end")
-      class_eval("def #{arg}=(val);@builder.#{arg}=val;end")
+      class_eval("def #{arg};@builder.#{arg};end", __FILE__, __LINE__)
+      class_eval("def #{arg}=(val);@builder.#{arg}=val;end", __FILE__, __LINE__)
     end
   end
 
   def builder_attr_reader(*args)
     args.each do |arg|
-      class_eval("def #{arg};@builder.#{arg};end")
+      class_eval("def #{arg};@builder.#{arg};end", __FILE__, __LINE__)
     end
   end
 
   def builder_attr_writer(*args)
     args.each do |arg|
-      class_eval("def #{arg}=(val);@builder.#{arg}=val;end")
+      class_eval("def #{arg}=(val);@builder.#{arg}=val;end", __FILE__, __LINE__)
     end
   end
 end
