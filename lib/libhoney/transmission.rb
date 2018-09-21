@@ -59,12 +59,15 @@ module Libhoney
 
         begin
           http = http_clients[e.api_host]
+          url  = '/1/events/' + Addressable::URI.escape(e.dataset.dup)
 
-          resp = http.post('/1/events/'+URI.escape(e.dataset), json: e.data, headers: {
-            'X-Honeycomb-Team' => e.writekey,
-            'X-Honeycomb-SampleRate' => e.sample_rate,
-            'X-Event-Time' => e.timestamp.iso8601(3)
-          })
+          resp = http.post(url,
+                           json: e.data,
+                           headers: {
+                             'X-Honeycomb-Team'       => e.writekey,
+                             'X-Honeycomb-SampleRate' => e.sample_rate,
+                             'X-Event-Time'           => e.timestamp.iso8601(3)
+                           })
 
           # "You must consume response before sending next request via persistent connection"
           # https://github.com/httprb/http/wiki/Persistent-Connections-%28keep-alive%29#note-using-persistent-requests-correctly
