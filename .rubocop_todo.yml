@@ -55,15 +55,6 @@ Metrics/ParameterLists:
 Metrics/PerceivedComplexity:
   Max: 8
 
-# Offense count: 3
-# Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
-# AllowedNames: io, id, to, by, on, in, at, ip, db
-Naming/UncommunicativeMethodParamName:
-  Exclude:
-    - 'example/fact.rb'
-    - 'lib/libhoney/builder.rb'
-    - 'lib/libhoney/client.rb'
-
 # Offense count: 4
 Style/EvalWithLocation:
   Exclude:

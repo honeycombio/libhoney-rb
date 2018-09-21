@@ -3,20 +3,21 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require 'libhoney'
 
-writekey = '7aefa39399a474bd9f414a8e3f8d9691' # replace this with yours from https://ui.honeycomb.com/account
-dataset = 'factorial'
+# replace this with yours from https://ui.honeycomb.com/account
+writekey = '7aefa39399a474bd9f414a8e3f8d9691'
+dataset  = 'factorial'
 
-def factorial(n)
-  return -1 * factorial(abs(n)) if n < 0
-  return 1 if n.zero?
+def factorial(number)
+  return -1 * factorial(abs(number)) if number < 0
+  return 1 if number.zero?
 
-  n * factorial(n - 1)
+  number * factorial(number - 1)
 end
 
 # run factorial. libh_builder comes with some fields already populated
 # (namely, "version", "num_threads", and "range")
 def run_fact(low, high, libh_builder)
-  low..high.each do |i|
+  (low..high).each do |i|
     ev = libh_builder.event
     ev.metadata = { fn: 'run_fact',
                     i: i }

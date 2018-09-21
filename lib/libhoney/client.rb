@@ -158,12 +158,12 @@ module Libhoney
     # adds a single field->dynamic value function to the global Builder.
     #
     # @param name [String] name of field to add.
-    # @param fn [#call] function that will be called to generate the value whenever an event is created.
+    # @param proc [#call] function that will be called to generate the value whenever an event is created.
     # @return [self] this libhoney instance.
     # @example
     #   honey.add_dynamic_field("active_threads", Proc.new { Thread.list.select {|thread| thread.status == "run"}.count })
-    def add_dynamic_field(name, fn)
-      @builder.add_dynamic_field(name, fn)
+    def add_dynamic_field(name, proc)
+      @builder.add_dynamic_field(name, proc)
       self
     end
 

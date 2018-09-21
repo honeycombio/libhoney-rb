@@ -59,12 +59,12 @@ module Libhoney
     # adds a single field->dynamic value function, which is invoked to supply values when events are created from this builder.
     #
     # @param name [string] the name of the field to add to events.
-    # @param fn [#call] the function called to generate the value for this field.
+    # @param proc [#call] the function called to generate the value for this field.
     # @return [self] this Builder instance.
     # @example
     #   builder.add_dynamic_field("process_heapUsed", Proc.new { Thread.list.select {|thread| thread.status == "run"}.count })
-    def add_dynamic_field(name, fn)
-      @dyn_fields[name] = fn
+    def add_dynamic_field(name, proc)
+      @dyn_fields[name] = proc
     end
 
     # creates and sends an event, including all builder fields/dyn_fields, as well as anything in the optional data parameter.
