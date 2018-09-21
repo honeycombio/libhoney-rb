@@ -64,14 +64,6 @@ Naming/UncommunicativeMethodParamName:
     - 'lib/libhoney/builder.rb'
     - 'lib/libhoney/client.rb'
 
-# Offense count: 2
-Style/Documentation:
-  Exclude:
-    - 'spec/**/*'
-    - 'test/**/*'
-    - 'lib/libhoney/builder.rb'
-    - 'lib/libhoney/response.rb'
-
 # Offense count: 4
 Style/EvalWithLocation:
   Exclude:
