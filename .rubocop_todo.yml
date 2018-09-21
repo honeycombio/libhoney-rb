@@ -12,12 +12,6 @@ Lint/HandleExceptions:
     - 'lib/libhoney/client.rb'
     - 'lib/libhoney/transmission.rb'
 
-# Offense count: 2
-Lint/RescueException:
-  Exclude:
-    - 'example/fact.rb'
-    - 'lib/libhoney/transmission.rb'
-
 # Offense count: 7
 Metrics/AbcSize:
   Max: 35

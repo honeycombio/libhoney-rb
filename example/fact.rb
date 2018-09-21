@@ -62,7 +62,7 @@ Thread.new do
     # sends an event with "version", "num_threads", and "status" fields
     libhoney.send_now(status: 'ending run')
     libhoney.close
-  rescue Exception => e
+  rescue StandardError => e
     puts e
   end
 end
