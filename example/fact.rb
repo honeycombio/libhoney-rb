@@ -30,7 +30,11 @@ def run_fact(low, high, libh_builder)
 end
 
 def read_responses(resp_queue)
-  while resp = resp_queue.pop
+  loop do
+    resp = resp_queue.pop
+    puts resp_queue.inspect
+    break if resp.nil?
+
     puts "Sent: Event with metadata #{resp.metadata} in #{resp.duration * 1000}ms."
     puts "Got:  Response code #{resp.status_code}"
     puts
