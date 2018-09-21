@@ -51,21 +51,21 @@ module Libhoney
 
       # eat events until we run out
       loop do
-        e = @send_queue.pop
-        break if e.nil?
+        event = @send_queue.pop
+        break if event.nil?
 
         before = Time.now
 
         begin
-          http = http_clients[e.api_host]
-          url  = '/1/events/' + Addressable::URI.escape(e.dataset.dup)
+          http = http_clients[event.api_host]
+          url  = '/1/events/' + Addressable::URI.escape(event.dataset.dup)
 
           resp = http.post(url,
-                           json: e.data,
+                           json: event.data,
                            headers: {
-                             'X-Honeycomb-Team'       => e.writekey,
-                             'X-Honeycomb-SampleRate' => e.sample_rate,
-                             'X-Event-Time'           => e.timestamp.iso8601(3)
+                             'X-Honeycomb-Team'       => event.writekey,
+                             'X-Honeycomb-SampleRate' => event.sample_rate,
+                             'X-Event-Time'           => event.timestamp.iso8601(3)
                            })
 
           # "You must consume response before sending next request via persistent connection"
@@ -82,7 +82,7 @@ module Libhoney
         ensure
           if response
             response.duration = Time.now - before
-            response.metadata = e.metadata
+            response.metadata = event.metadata
           end
         end
 

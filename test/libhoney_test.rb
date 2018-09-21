@@ -210,10 +210,10 @@ class LibhoneyTest < Minitest::Test
       .to_return(status: 200, body: 'OK')
 
     (1..times_to_test).each do |i|
-      e = @honey.event
-      e.dataset = 'mydataset-close'
-      e.add('test' => i)
-      e.send
+      event = @honey.event
+      event.dataset = 'mydataset-close'
+      event.add('test' => i)
+      event.send
     end
     thread_count = @honey.close
 
@@ -304,10 +304,11 @@ class LibhoneyTest < Minitest::Test
     stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset%20send')
       .to_return(status: 200, body: 'OK')
 
-    e = @honey.event
-    e.dataset = 'mydataset send'
-    e.add('argle' => 'bargle')
-    e.send
+    event = @honey.event
+    event.dataset = 'mydataset send'
+    event.add('argle' => 'bargle')
+    event.send
+
     @honey.close
 
     assert_requested :post, 'https://api.honeycomb.io/1/events/mydataset%20send'

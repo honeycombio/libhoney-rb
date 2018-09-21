@@ -4,7 +4,7 @@ require 'http'
 
 require 'libhoney/null_transmission'
 
-# define a few additions that proxy access through Client's builder.  makes Client much tighter.
+# Define a few additions that proxy access through Client's builder. Makes Client much tighter.
 class Class
   def builder_attr_accessor(*args)
     args.each do |arg|
