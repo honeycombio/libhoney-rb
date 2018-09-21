@@ -1,7 +1,5 @@
 # libhoney [![Build Status](https://travis-ci.org/honeycombio/libhoney-rb.svg?branch=master)](https://travis-ci.org/honeycombio/libhoney-rb) [![Gem Version](https://badge.fury.io/rb/libhoney.svg)](https://badge.fury.io/rb/libhoney)
 
-![Honeycomb logo](https://docs.honeycomb.io/images/hcio_logo.svg)
-
 Ruby gem for sending events to [Honeycomb](https://www.honeycomb.io), a service for debugging your software in production.
 
 - [Usage and Examples](https://docs.honeycomb.io/sdk/ruby/)
