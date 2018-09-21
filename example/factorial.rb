@@ -33,7 +33,6 @@ end
 def read_responses(response_queue)
   loop do
     response = response_queue.pop
-    puts response_queue.inspect
     break if response.nil?
 
     puts "Sent: Event with metadata #{response.metadata} in #{response.duration * 1000}ms."
