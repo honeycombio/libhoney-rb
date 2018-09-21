@@ -22,13 +22,13 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = '>= 2.2.0'
 
+  spec.add_development_dependency "bump", "~> 0.5"
   spec.add_development_dependency "bundler", "~> 1.7"
+  spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 12.3"
   spec.add_development_dependency "webmock", "~> 3.4"
-  spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "yard"
   spec.add_development_dependency "yardstick", "~> 0.9"
-  spec.add_development_dependency "bump", "~> 0.5"
-  spec.add_dependency "http", ">= 2.0", '< 4.0'
   spec.add_dependency "addressable", "~> 2.0"
+  spec.add_dependency "http", ">= 2.0", '< 4.0'
 end
