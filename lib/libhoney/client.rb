@@ -94,8 +94,7 @@ module Libhoney
         # transmission (e.g. to a MockTransmissionClient), that's almost
         # certainly a misconfiguration, even though it's possible to override
         # them on a per-event basis. So let's handle the misconfiguration
-        # early rather than potentially throwing thousands of exceptions at
-        # runtime.
+        # early rather than potentially throwing thousands of exceptions at runtime.
         warn "#{self.class.name}: no #{writekey ? 'dataset' : 'writekey'} configured, disabling sending events"
         @transmission = NullTransmissionClient.new
       end
