@@ -9,12 +9,13 @@ class LibhoneyDefaultTest < Minitest::Test
     @old_stderr = $stderr
     $stderr = StringIO.new
   end
+
   def teardown
     $stderr = @old_stderr
   end
 
   def test_initialize
-    honey = Libhoney::Client.new()
+    honey = Libhoney::Client.new
     assert_nil honey.writekey
     assert_nil honey.dataset
     assert_match(/writekey/, $stderr.string, 'should log a warning due to missing writekey')
@@ -27,11 +28,11 @@ class LibhoneyDefaultTest < Minitest::Test
     assert_equal 10, honey.max_concurrent_batches
     assert_equal 1000, honey.pending_work_capacity
 
-    honey = Libhoney::Client.new(:writekey => 'writekey', :dataset => 'dataset', :sample_rate => 4,
-                                 :api_host => 'http://something.else', :block_on_send => true,
-                                 :block_on_responses => true, :max_batch_size => 100,
-                                 :send_frequency => 150, :max_concurrent_batches => 100,
-                                 :pending_work_capacity => 1500)
+    honey = Libhoney::Client.new(writekey: 'writekey', dataset: 'dataset', sample_rate: 4,
+                                 api_host: 'http://something.else', block_on_send: true,
+                                 block_on_responses: true, max_batch_size: 100,
+                                 send_frequency: 150, max_concurrent_batches: 100,
+                                 pending_work_capacity: 1500)
     assert_equal 'writekey', honey.writekey
     assert_equal 'dataset', honey.dataset
     assert_equal 4, honey.sample_rate
@@ -47,12 +48,14 @@ end
 
 class LibhoneyBuilderTest < Minitest::Test
   def setup
-    @honey = Libhoney::Client.new(:writekey => 'writekey', :dataset => 'dataset', :sample_rate => 1,
-                                  :api_host => 'http://something.else')
+    @honey = Libhoney::Client.new(writekey: 'writekey', dataset: 'dataset', sample_rate: 1,
+                                  api_host: 'http://something.else')
   end
+
   def teardown
     @honey.close(false)
   end
+
   def test_builder_inheritance
     @honey.add_field('argle', 'bargle')
 
@@ -90,10 +93,10 @@ class LibhoneyBuilderTest < Minitest::Test
   end
 
   def test_dynamic_fields
-    lam = lambda { 42 }
+    lam = -> { 42 }
     @honey.add_dynamic_field('lam', lam)
 
-    proc = Proc.new { 123 }
+    proc = proc { 123 }
     @honey.add_dynamic_field('proc', proc)
 
     event = @honey.event()
@@ -103,10 +106,10 @@ class LibhoneyBuilderTest < Minitest::Test
 
   def test_send_now
     stub_request(:post, 'http://something.else/1/events/dataset')
-      .to_return(:status => 200, :body => 'OK')
+      .to_return(status: 200, body: 'OK')
 
     builder = @honey.builder
-    builder.send_now({'argle' => 'bargle'})
+    builder.send_now('argle' => 'bargle')
 
     @honey.close
 
@@ -114,10 +117,9 @@ class LibhoneyBuilderTest < Minitest::Test
   end
 end
 
-
 class LibhoneyEventTest < Minitest::Test
   def setup
-    @event = Libhoney::Client.new(:writekey => 'Xwritekey', :dataset => 'Xdataset', :api_host => 'Xurl').event
+    @event = Libhoney::Client.new(writekey: 'Xwritekey', dataset: 'Xdataset', api_host: 'Xurl').event
   end
 
   def test_overrides
@@ -139,19 +141,18 @@ class LibhoneyEventTest < Minitest::Test
   end
 
   def test_add
-    @event.add({'foo'=>'bar'})
+    @event.add('foo' => 'bar')
     assert_equal 'bar', @event.data['foo']
 
-    @event.add({'map'=>{ 'one' => 1, 'two' => 'dos' }})
+    @event.add('map' => { 'one' => 1, 'two' => 'dos' })
     assert_equal ({ 'one' => 1, 'two' => 'dos' }), @event.data['map']
-    assert_equal "{\"foo\":\"bar\",\"map\":{\"one\":1,\"two\":\"dos\"}}", @event.data.to_json
+    assert_equal '{"foo":"bar","map":{"one":1,"two":"dos"}}', @event.data.to_json
   end
 end
 
-
 class LibhoneyTest < Minitest::Test
   def setup
-    @honey = Libhoney::Client.new(:writekey => 'mywritekey', :dataset => 'mydataset')
+    @honey = Libhoney::Client.new(writekey: 'mywritekey', dataset: 'mydataset')
   end
 
   def test_event
@@ -163,30 +164,30 @@ class LibhoneyTest < Minitest::Test
     numtests = 900
 
     stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-send')
-      .to_return(:status => 200, :body => 'OK')
+      .to_return(status: 200, body: 'OK')
 
     e = @honey.event
-    e.dataset = "mydataset-send"
-    e.add({'argle' => 'bargle'})
+    e.dataset = 'mydataset-send'
+    e.add('argle' => 'bargle')
     assert_instance_of Libhoney::Event, e
     e.send
 
-    for i in 1..numtests
+    (1..numtests).each do |i|
       e = @honey.event
-      e.dataset = "mydataset-send"
-      e.add({'test' => i})
+      e.dataset = 'mydataset-send'
+      e.add('test' => i)
       e.send
     end
     @honey.close
 
-    assert_requested :post, 'https://api.honeycomb.io/1/events/mydataset-send', times: numtests+1
+    assert_requested :post, 'https://api.honeycomb.io/1/events/mydataset-send', times: numtests + 1
   end
 
   def test_send_now
     stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset')
-      .to_return(:status => 200, :body => 'OK')
+      .to_return(status: 200, body: 'OK')
 
-    @honey.send_now({'argle' => 'bargle'})
+    @honey.send_now('argle' => 'bargle')
 
     @honey.close
 
@@ -197,12 +198,12 @@ class LibhoneyTest < Minitest::Test
     numtests = 900
 
     stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-close')
-      .to_return(:status => 200, :body => 'OK')
+      .to_return(status: 200, body: 'OK')
 
-    for i in 1..numtests
+    (1..numtests).each do |i|
       e = @honey.event
-      e.dataset = "mydataset-close"
-      e.add({'test' => i})
+      e.dataset = 'mydataset-close'
+      e.add('test' => i)
       e.send
     end
     thread_count = @honey.close
@@ -212,11 +213,11 @@ class LibhoneyTest < Minitest::Test
 
   def test_response_metadata
     stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-response_metadata')
-      .to_return(:status => 200, :body => 'OK')
+      .to_return(status: 200, body: 'OK')
 
     builder = @honey.builder
-    builder.dataset = "mydataset-response_metadata"
-    builder.add_field("hi", "bye")
+    builder.dataset = 'mydataset-response_metadata'
+    builder.add_field('hi', 'bye')
 
     event = builder.event
     event.metadata = 42
@@ -241,15 +242,15 @@ class LibhoneyTest < Minitest::Test
   end
 
   def does_not_send
-    lambda { |event|
-      raise Exception.new("libhoney: unexpected send occured")
+    lambda { |_event|
+      raise Exception, 'libhoney: unexpected send occured'
     }
   end
 
   def test_sampling
     builder = @honey.builder
-    builder.dataset = "mydataset-sampling"
-    builder.add_field("hi", "bye")
+    builder.dataset = 'mydataset-sampling'
+    builder.add_field('hi', 'bye')
 
     @honey.stub(:send_event, does_not_send) do
       event = builder.event
@@ -269,7 +270,7 @@ class LibhoneyTest < Minitest::Test
   def test_error_handling
     stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset')
       .to_raise('the network is dark and full of errors').times(20)
-      .to_return(:status => 200, :body => 'OK')
+      .to_return(status: 200, body: 'OK')
 
     20.times do
       event = @honey.event
@@ -282,7 +283,7 @@ class LibhoneyTest < Minitest::Test
       assert_kind_of(Exception, response.error)
     end
 
-    @honey.send_now({'argle' => 'bargle'})
+    @honey.send_now('argle' => 'bargle')
 
     response = @honey.responses.pop
     assert_equal(200, response.status_code)
@@ -292,11 +293,11 @@ class LibhoneyTest < Minitest::Test
 
   def test_dataset_quoting
     stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset%20send')
-      .to_return(:status => 200, :body => 'OK')
+      .to_return(status: 200, body: 'OK')
 
     e = @honey.event
-    e.dataset = "mydataset send"
-    e.add({'argle' => 'bargle'})
+    e.dataset = 'mydataset send'
+    e.add('argle' => 'bargle')
     e.send
     @honey.close
 
@@ -314,13 +315,13 @@ class LibhoneyUserAgentTest < Minitest::Test
     honey = Libhoney::Client.new(writekey: 'mywritekey', dataset: 'somedataset')
     honey.send_now('ORLY' => 'YA RLY')
     honey.close
-    assert_requested :post, 'https://api.honeycomb.io/1/events/somedataset', headers: {'User-Agent': "libhoney-rb/#{::Libhoney::VERSION}"}
+    assert_requested :post, 'https://api.honeycomb.io/1/events/somedataset', headers: { 'User-Agent': "libhoney-rb/#{::Libhoney::VERSION}" }
   end
 
   def test_user_agent_addition
     honey = Libhoney::Client.new(writekey: 'mywritekey', dataset: 'somedataset', user_agent_addition: 'test/4.2')
     honey.send_now('ORLY' => 'YA RLY')
     honey.close
-    assert_requested :post, 'https://api.honeycomb.io/1/events/somedataset', headers: {'User-Agent': %r{libhoney-rb/.* test/4.2}}
+    assert_requested :post, 'https://api.honeycomb.io/1/events/somedataset', headers: { 'User-Agent': %r{libhoney-rb/.* test/4.2} }
   end
 end

@@ -1,4 +1,3 @@
-require 'thread'
 require 'time'
 require 'json'
 require 'http'
@@ -9,18 +8,20 @@ require 'libhoney/null_transmission'
 class Class
   def builder_attr_accessor(*args)
     args.each do |arg|
-      self.class_eval("def #{arg};@builder.#{arg};end")
-      self.class_eval("def #{arg}=(val);@builder.#{arg}=val;end")
+      class_eval("def #{arg};@builder.#{arg};end")
+      class_eval("def #{arg}=(val);@builder.#{arg}=val;end")
     end
   end
+
   def builder_attr_reader(*args)
     args.each do |arg|
-      self.class_eval("def #{arg};@builder.#{arg};end")
+      class_eval("def #{arg};@builder.#{arg};end")
     end
   end
+
   def builder_attr_writer(*args)
     args.each do |arg|
-      self.class_eval("def #{arg}=(val);@builder.#{arg}=val;end")
+      class_eval("def #{arg}=(val);@builder.#{arg}=val;end")
     end
   end
 end
@@ -71,10 +72,11 @@ module Libhoney
                    max_concurrent_batches: 10,
                    pending_work_capacity: 1000)
       # check for insanity
-      raise Exception.new('libhoney:  max_concurrent_batches must be greater than 0') if max_concurrent_batches < 1
-      raise Exception.new('libhoney:  sample rate must be greater than 0') if sample_rate < 1
+      raise Exception, 'libhoney:  max_concurrent_batches must be greater than 0' if max_concurrent_batches < 1
+      raise Exception, 'libhoney:  sample rate must be greater than 0' if sample_rate < 1
 
-      raise Exception.new("libhoney:  Ruby versions < 2.2 are not supported") if !Gem::Dependency.new("ruby", "~> 2.2").match?("ruby", RUBY_VERSION)
+      raise Exception, 'libhoney:  Ruby versions < 2.2 are not supported' unless Gem::Dependency.new('ruby', '~> 2.2').match?('ruby', RUBY_VERSION)
+
       @builder = Builder.new(self, nil)
       @builder.writekey = writekey
       @builder.dataset = dataset
@@ -124,8 +126,9 @@ module Libhoney
     ##
     # Nuke the queue and wait for inflight requests to complete before returning.
     # If you set drain=false, all queued requests will be dropped on the floor.
-    def close(drain=true)
+    def close(drain = true)
       return @tx.close(drain) if @tx
+
       0
     end
 
@@ -177,7 +180,7 @@ module Libhoney
     #   honey.send_now {
     #     additionalField: value
     #   }
-    #/
+    # /
     def send_now(data = {})
       @builder.send_now(data)
       self
@@ -191,26 +194,24 @@ module Libhoney
     # @param event [Event] the event to send to honeycomb
     # @api private
     def send_event(event)
-      @lock.synchronize {
-        if !@tx
-          @tx = TransmissionClient.new(:max_batch_size => @max_batch_size,
-                                       :send_frequency => @send_frequency,
-                                       :max_concurrent_batches => @max_concurrent_batches,
-                                       :pending_work_capacity => @pending_work_capacity,
-                                       :responses => @responses,
-                                       :block_on_send => @block_on_send,
-                                       :block_on_responses => @block_on_responses,
-                                       :user_agent_addition => @user_agent_addition)
-        end
-      }
+      @lock.synchronize do
+        @tx ||= TransmissionClient.new(max_batch_size: @max_batch_size,
+                                       send_frequency: @send_frequency,
+                                       max_concurrent_batches: @max_concurrent_batches,
+                                       pending_work_capacity: @pending_work_capacity,
+                                       responses: @responses,
+                                       block_on_send: @block_on_send,
+                                       block_on_responses: @block_on_responses,
+                                       user_agent_addition: @user_agent_addition)
+      end
 
       @tx.add(event)
     end
 
     # @api private
     def send_dropped_response(event, msg)
-      response = Response.new(:error => msg,
-                              :metadata => event.metadata)
+      response = Response.new(error: msg,
+                              metadata: event.metadata)
       begin
         @responses.enq(response, !@block_on_responses)
       rescue ThreadError

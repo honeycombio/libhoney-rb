@@ -18,16 +18,14 @@ module Libhoney
     def add(event)
       if @verbose
         metadata = "Honeycomb dataset '#{event.dataset}' | #{event.timestamp.iso8601}"
-        if event.sample_rate != 1
-          metadata << " (sample rate: #{event.sample_rate})"
-        end
+        metadata << " (sample rate: #{event.sample_rate})" if event.sample_rate != 1
         @output.print("#{metadata} | ")
       end
       @output.puts(event.data.to_json)
     end
 
     # Flushes the output (but does not close it)
-    def close(drain)
+    def close(_drain)
       @output.flush
     end
   end

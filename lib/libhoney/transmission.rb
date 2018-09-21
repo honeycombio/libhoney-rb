@@ -29,9 +29,9 @@ module Libhoney
     end
 
     def add(event)
-      raise ArgumentError, "No APIHost for Honeycomb. Can't send to the Great Unknown." if event.api_host == ""
-      raise ArgumentError, "No WriteKey specified. Can't send event." if event.writekey == ""
-      raise ArgumentError, "No Dataset for Honeycomb. Can't send datasetless." if event.dataset == ""
+      raise ArgumentError, "No APIHost for Honeycomb. Can't send to the Great Unknown." if event.api_host == ''
+      raise ArgumentError, "No WriteKey specified. Can't send event." if event.writekey == ''
+      raise ArgumentError, "No Dataset for Honeycomb. Can't send datasetless." if event.dataset == ''
 
       begin
         @send_queue.enq(event, !@block_on_send)
@@ -45,15 +45,15 @@ module Libhoney
     def send_loop
       http_clients = Hash.new do |h, api_host|
         h[api_host] = HTTP.persistent(api_host).headers(
-            'User-Agent'   => @user_agent,
-            'Content-Type' => 'application/json',
-          )
+          'User-Agent'   => @user_agent,
+          'Content-Type' => 'application/json'
+        )
       end
 
       # eat events until we run out
-      loop {
+      loop do
         e = @send_queue.pop
-        break if e == nil
+        break if e.nil?
 
         before = Time.now
 
@@ -73,13 +73,13 @@ module Libhoney
           # https://github.com/httprb/http/wiki/Persistent-Connections-%28keep-alive%29#note-using-persistent-requests-correctly
           resp.flush
 
-          response = Response.new(:status_code => resp.status)
+          response = Response.new(status_code: resp.status)
         rescue Exception => error
           # catch a broader swath of exceptions than is usually good practice,
           # because this is effectively the top-level exception handler for the
           # sender threads, and we don't want those threads to die (leaving
           # nothing consuming the queue).
-          response = Response.new(:error => error)
+          response = Response.new(error: error)
         ensure
           if response
             response.duration = Time.now - before
@@ -92,10 +92,14 @@ module Libhoney
         rescue ThreadError
           # happens if the queue was full and block_on_send = false.
         end
-      }
+      end
     ensure
       http_clients.each do |_, http|
-        http.close rescue nil
+        begin
+          http.close
+        rescue StandardError
+          nil
+        end
       end
     end
 
@@ -106,9 +110,7 @@ module Libhoney
       # send @threads.length number of nils so each thread will fall out of send_loop
       @threads.length.times { @send_queue << nil }
 
-      @threads.each do |t|
-        t.join
-      end
+      @threads.each(&:join)
       @threads = []
 
       @responses.enq(nil)
@@ -117,6 +119,7 @@ module Libhoney
     end
 
     private
+
     def build_user_agent(user_agent_addition)
       ua = "libhoney-rb/#{VERSION}"
       ua << " #{user_agent_addition}" if user_agent_addition
@@ -124,12 +127,10 @@ module Libhoney
     end
 
     def ensure_threads_running
-      @lock.synchronize {
+      @lock.synchronize do
         @threads.select!(&:alive?)
-        while @threads.length < @max_concurrent_batches
-          @threads << Thread.new { self.send_loop }
-        end
-      }
+        @threads << Thread.new { send_loop } while @threads.length < @max_concurrent_batches
+      end
     end
   end
 end

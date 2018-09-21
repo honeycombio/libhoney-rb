@@ -2,7 +2,6 @@ require 'libhoney/client'
 require 'libhoney/mock_transmission'
 
 module Libhoney
-
   # A client with the network stubbed out for testing purposes. Does not
   # actually send any events to Honeycomb; instead, records events for later
   # inspection.
@@ -25,5 +24,4 @@ module Libhoney
       @tx.reset
     end
   end
-
 end

@@ -4,10 +4,8 @@ module Libhoney
   #
   # @api private
   class NullTransmissionClient
-    def add(event)
-    end
+    def add(event); end
 
-    def close(drain)
-    end
+    def close(drain); end
   end
 end

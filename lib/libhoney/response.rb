@@ -1,4 +1,3 @@
-
 module Libhoney
   class Response
     attr_accessor :duration, :status_code, :metadata, :error

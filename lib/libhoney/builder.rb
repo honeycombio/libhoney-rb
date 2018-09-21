@@ -14,7 +14,7 @@ module Libhoney
       @fields = {}
       @dyn_fields = {}
 
-      if parent_builder != nil
+      unless parent_builder.nil?
         @writekey = parent_builder.writekey
         @dataset = parent_builder.dataset
         @sample_rate = parent_builder.sample_rate
@@ -78,9 +78,9 @@ module Libhoney
     #     :additionalField => value
     #   }
     def send_now(data = {})
-      ev = self.event
+      ev = event
       ev.add(data)
-      ev.send()
+      ev.send
       self
     end
 

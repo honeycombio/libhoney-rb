@@ -2,7 +2,6 @@ require 'libhoney/client'
 require 'libhoney/log_transmission'
 
 module Libhoney
-
   # A client that prints events to stderr or a file for inspection. Does not
   # actually send any events to Honeycomb; instead, records events for later
   # inspection.
@@ -17,5 +16,4 @@ module Libhoney
             **kwargs)
     end
   end
-
 end
