@@ -14,7 +14,7 @@ class LibhoneyDefaultTest < Minitest::Test
     $stderr = @old_stderr
   end
 
-  def test_initialize
+  def test_initialize_without_params
     honey = Libhoney::Client.new
     assert_nil honey.writekey
     assert_nil honey.dataset
@@ -27,16 +27,19 @@ class LibhoneyDefaultTest < Minitest::Test
     assert_equal 100, honey.send_frequency
     assert_equal 10, honey.max_concurrent_batches
     assert_equal 1000, honey.pending_work_capacity
+  end
 
+  def test_initialize_with_params
     honey = Libhoney::Client.new(writekey: 'writekey', dataset: 'dataset', sample_rate: 4,
-                                 api_host: 'http://something.else', block_on_send: true,
+                                 api_host: 'http://example.com', block_on_send: true,
                                  block_on_responses: true, max_batch_size: 100,
                                  send_frequency: 150, max_concurrent_batches: 100,
                                  pending_work_capacity: 1500)
+
     assert_equal 'writekey', honey.writekey
     assert_equal 'dataset', honey.dataset
     assert_equal 4, honey.sample_rate
-    assert_equal 'http://something.else', honey.api_host
+    assert_equal 'http://example.com', honey.api_host
     assert_equal true, honey.block_on_send
     assert_equal true, honey.block_on_responses
     assert_equal 100, honey.max_batch_size
@@ -48,8 +51,10 @@ end
 
 class LibhoneyBuilderTest < Minitest::Test
   def setup
-    @honey = Libhoney::Client.new(writekey: 'writekey', dataset: 'dataset', sample_rate: 1,
-                                  api_host: 'http://something.else')
+    @honey = Libhoney::Client.new(writekey: 'writekey',
+                                  dataset: 'dataset',
+                                  sample_rate: 1,
+                                  api_host: 'http://example.com')
   end
 
   def teardown
@@ -64,7 +69,7 @@ class LibhoneyBuilderTest < Minitest::Test
     assert_equal 'writekey', builder.writekey
     assert_equal 'dataset', builder.dataset
     assert_equal 1, builder.sample_rate
-    assert_equal 'http://something.else', builder.api_host
+    assert_equal 'http://example.com', builder.api_host
 
     # writekey, dataset, sample_rate, and api_host are all changeable on a builder
     builder.writekey = '1234'
@@ -105,7 +110,7 @@ class LibhoneyBuilderTest < Minitest::Test
   end
 
   def test_send_now
-    stub_request(:post, 'http://something.else/1/events/dataset')
+    stub_request(:post, 'http://example.com/1/events/dataset')
       .to_return(status: 200, body: 'OK')
 
     builder = @honey.builder
@@ -113,7 +118,7 @@ class LibhoneyBuilderTest < Minitest::Test
 
     @honey.close
 
-    assert_requested :post, 'http://something.else/1/events/dataset', times: 1
+    assert_requested :post, 'http://example.com/1/events/dataset', times: 1
   end
 end
 
@@ -162,26 +167,29 @@ class LibhoneyTest < Minitest::Test
 
   def test_send
     # do 900 so that we fit under the queue size and don't drop events
-    numtests = 900
+    times_to_test = 900
 
     stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-send')
       .to_return(status: 200, body: 'OK')
 
-    e = @honey.event
-    e.dataset = 'mydataset-send'
-    e.add('argle' => 'bargle')
-    assert_instance_of Libhoney::Event, e
-    e.send
+    event = @honey.event
+    event.dataset = 'mydataset-send'
+    event.add('argle' => 'bargle')
+    event.send
 
-    (1..numtests).each do |i|
-      e = @honey.event
-      e.dataset = 'mydataset-send'
-      e.add('test' => i)
-      e.send
+    assert_instance_of Libhoney::Event, event
+
+    (1..times_to_test).each do |i|
+      event = @honey.event
+      event.dataset = 'mydataset-send'
+      event.add('test' => i)
+      event.send
     end
+
     @honey.close
 
-    assert_requested :post, 'https://api.honeycomb.io/1/events/mydataset-send', times: numtests + 1
+    assert_requested :post, 'https://api.honeycomb.io/1/events/mydataset-send',
+                     times: times_to_test + 1
   end
 
   def test_send_now
@@ -196,12 +204,12 @@ class LibhoneyTest < Minitest::Test
   end
 
   def test_close
-    numtests = 900
+    times_to_test = 900
 
     stub_request(:post, 'https://api.honeycomb.io/1/events/mydataset-close')
       .to_return(status: 200, body: 'OK')
 
-    (1..numtests).each do |i|
+    (1..times_to_test).each do |i|
       e = @honey.event
       e.dataset = 'mydataset-close'
       e.add('test' => i)
