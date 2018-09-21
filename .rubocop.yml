@@ -11,3 +11,7 @@ Metrics/LineLength:
   Exclude:
     - lib/libhoney/client.rb
     - lib/libhoney/builder.rb
+
+Metrics/ClassLength:
+  Exclude:
+    - test/*
