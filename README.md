@@ -60,7 +60,7 @@ honeycomb.close
 
 Check out the documentation for [`Libhoney::Client`](http://www.rubydoc.info/gems/libhoney/Libhoney/Client) for more detailed API documentation.
 
-You can find a more complete example demonstrating usage in [`example/fact.rb`](example/fact.rb)
+You can find a more complete example demonstrating usage in [`example/factorial.rb`](example/factorial.rb)
 
 ## Debugging instrumentation
 
