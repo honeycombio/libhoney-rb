@@ -45,9 +45,9 @@ module Libhoney
     def send_loop
       http_clients = Hash.new do |h, api_host|
         h[api_host] = HTTP.persistent(api_host).headers(
-            'User-Agent' => @user_agent,
+            'User-Agent'   => @user_agent,
             'Content-Type' => 'application/json',
-        )
+          )
       end
 
       # eat events until we run out
