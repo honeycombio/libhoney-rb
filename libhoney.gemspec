@@ -10,7 +10,6 @@ Gem::Specification.new do |spec|
   spec.description = "Ruby gem for sending data to Honeycomb"
   spec.authors     = ['The Honeycomb.io Team']
   spec.email       = 'support@honeycomb.io'
-  spec.files       = ['lib/libhoney.rb', 'lib/libhoney/version.rb']
   spec.homepage    = 'https://github.com/honeycombio/libhoney-rb'
   spec.license     = 'Apache-2.0'
 
