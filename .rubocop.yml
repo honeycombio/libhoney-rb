@@ -6,6 +6,10 @@ AllCops:
 Style/Documentation:
   Enabled: false
 
+Lint/RescueException:
+  Exclude:
+    - 'lib/libhoney/transmission.rb'
+
 Metrics/ClassLength:
   Exclude:
     - test/*

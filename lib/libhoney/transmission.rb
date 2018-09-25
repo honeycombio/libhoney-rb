@@ -73,7 +73,7 @@ module Libhoney
           resp.flush
 
           response = Response.new(status_code: resp.status)
-        rescue StandardError => error
+        rescue Exception => error
           # catch a broader swath of exceptions than is usually good practice,
           # because this is effectively the top-level exception handler for the
           # sender threads, and we don't want those threads to die (leaving
