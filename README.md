@@ -7,6 +7,10 @@ Requires Ruby 2.2 or greater.
 - [Usage and Examples](https://docs.honeycomb.io/sdk/ruby/)
 - [API Reference](https://www.rubydoc.info/gems/libhoney)
 
+For tracing support and automatic instrumentation of Sinatra, Rack, ActiveRecord, and other frameworks, check out our [Beeline for Ruby](https://github.com/honeycombio/beeline-ruby).
+
+For automatic instrumentation of Ruby on Rails, check out our [Rails integration](https://github.com/honeycombio/honeycomb-rails).
+
 ## Contributions
 
 Features, bug fixes and other changes to `libhoney` are gladly accepted. Please
