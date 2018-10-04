@@ -57,14 +57,14 @@ Thread.new do
 
     event = libhoney.event
     event.metadata = { fn: 'work_thread' }
-    event.add_field('start_time', Time.now.iso8603(3))
+    event.add_field('start_time', Time.now.iso8601(3))
     event.with_timer 'run_fact_low_dur_ms' do
       run_factorial(1, 20, libhoney.builder(range: 'low'))
     end
     event.with_timer 'run_fact_high_dur_ms' do
       run_factorial(31, 40, libhoney.builder(range: 'high'))
     end
-    event.add_field('end_time', Time.now.iso8603(3))
+    event.add_field('end_time', Time.now.iso8601(3))
     # sends an event with "version", "num_threads", "start_time", "end_time",
     # "run_fact_low_dur_ms", "run_fact_high_dur_ms"
     event.send
