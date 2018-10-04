@@ -55,13 +55,19 @@ Thread.new do
     a_proc = proc { Thread.list.select { |thread| thread.status == 'run' }.count }
     libhoney.add_dynamic_field('num_threads', a_proc)
 
-    # sends an event with "version", "num_threads", and "status" fields
-    libhoney.send_now(status: 'starting run')
-    run_factorial(1, 20, libhoney.builder(range: 'low'))
-    run_factorial(31, 40, libhoney.builder(range: 'high'))
+    ev = libhoney.event
+    ev.add_field('start_time', Time.now.iso8603(3))
+    ev.with_timer 'run_fact_low_dur_ms' do
+      run_fact(1, 20, libhoney.builder(range: 'low'))
+    end
+    ev.with_timer 'run_fact_high_dur_ms' do
+      run_fact(31, 40, libhoney.builder(range: 'high'))
+    end
+    ev.add_field('end_time', Time.now.iso8603(3))
+    # sends an event with "version", "num_threads", "start_time", "end_time",
+    # "run_fact_low_dur_ms", "run_fact_high_dur_ms"
+    ev.send
 
-    # sends an event with "version", "num_threads", and "status" fields
-    libhoney.send_now(status: 'ending run')
     libhoney.close
   rescue StandardError => e
     puts e
