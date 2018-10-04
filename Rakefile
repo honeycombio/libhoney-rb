@@ -21,4 +21,7 @@ Yardstick::Rake::Verify.new do |verify|
   verify.threshold = 55
 end
 
-task default: :test
+require 'rubocop/rake_task'
+RuboCop::RakeTask.new
+
+task default: %i[rubocop test]
