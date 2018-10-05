@@ -41,6 +41,7 @@ Thread.new do
 
       puts "Sent: Event with metadata #{response.metadata} in #{response.duration * 1000}ms."
       puts "Got:  Response code #{response.status_code}"
+      puts "      #{response.error.class}: #{response.error}" if response.error
       puts
     end
   rescue StandardError => e
