@@ -56,6 +56,7 @@ Thread.new do
     libhoney.add_dynamic_field('num_threads', a_proc)
 
     event = libhoney.event
+    event.metadata = { fn: 'work_thread' }
     event.add_field('start_time', Time.now.iso8603(3))
     event.with_timer 'run_fact_low_dur_ms' do
       run_factorial(1, 20, libhoney.builder(range: 'low'))
