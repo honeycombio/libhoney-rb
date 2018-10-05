@@ -46,7 +46,8 @@ module Libhoney
     def send_loop
       http_clients = Hash.new do |h, api_host|
         h[api_host] = HTTP.timeout(connect: @send_timeout, write: @send_timeout, read: @send_timeout)
-                          .persistent(api_host).headers(
+                          .persistent(api_host)
+                          .headers(
                             'User-Agent'   => @user_agent,
                             'Content-Type' => 'application/json'
                           )
