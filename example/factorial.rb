@@ -34,13 +34,17 @@ libhoney = Libhoney::Client.new(writekey: writekey,
                                 dataset:  dataset)
 
 Thread.new do
-  loop do
-    response = libhoney.responses.pop
-    break if response.nil?
+  begin
+    loop do
+      response = libhoney.responses.pop
+      break if response.nil?
 
-    puts "Sent: Event with metadata #{response.metadata} in #{response.duration * 1000}ms."
-    puts "Got:  Response code #{response.status_code}"
-    puts
+      puts "Sent: Event with metadata #{response.metadata} in #{response.duration * 1000}ms."
+      puts "Got:  Response code #{response.status_code}"
+      puts
+    end
+  rescue StandardError => e
+    puts "#{e.class} in response reader thread: #{e}"
   end
 end
 
