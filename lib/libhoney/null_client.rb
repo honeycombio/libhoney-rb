@@ -2,7 +2,6 @@ require 'libhoney/client'
 require 'libhoney/null_transmission'
 
 module Libhoney
-
   # A no-op client that silently drops events. Does not send events to
   # Honeycomb, or to anywhere else for that matter.
   #
@@ -18,5 +17,4 @@ module Libhoney
             **kwargs)
     end
   end
-
 end

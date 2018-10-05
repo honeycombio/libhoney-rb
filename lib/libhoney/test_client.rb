@@ -2,7 +2,6 @@ require 'libhoney/client'
 require 'libhoney/mock_transmission'
 
 module Libhoney
-
   # A client with the network stubbed out for testing purposes. Does not
   # actually send any events to Honeycomb; instead, records events for later
   # inspection.
@@ -17,13 +16,12 @@ module Libhoney
 
     # @return [Array<Event>] the recorded events
     def events
-      @tx.events
+      @transmission.events
     end
 
     # Discards the recorded events
     def reset
-      @tx.reset
+      @transmission.reset
     end
   end
-
 end

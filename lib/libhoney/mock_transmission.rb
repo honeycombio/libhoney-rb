@@ -20,8 +20,7 @@ module Libhoney
     end
 
     # Does nothing.
-    def close(drain)
-    end
+    def close(drain); end
 
     # Discards the recorded events
     def reset

@@ -1,26 +1,27 @@
-require 'thread'
 require 'time'
 require 'json'
 require 'http'
 
 require 'libhoney/null_transmission'
 
-# define a few additions that proxy access through Client's builder.  makes Client much tighter.
+# Define a few additions that proxy access through Client's builder. Makes Client much tighter.
 class Class
   def builder_attr_accessor(*args)
     args.each do |arg|
-      self.class_eval("def #{arg};@builder.#{arg};end")
-      self.class_eval("def #{arg}=(val);@builder.#{arg}=val;end")
+      class_eval("def #{arg};@builder.#{arg};end", __FILE__, __LINE__)
+      class_eval("def #{arg}=(val);@builder.#{arg}=val;end", __FILE__, __LINE__)
     end
   end
+
   def builder_attr_reader(*args)
     args.each do |arg|
-      self.class_eval("def #{arg};@builder.#{arg};end")
+      class_eval("def #{arg};@builder.#{arg};end", __FILE__, __LINE__)
     end
   end
+
   def builder_attr_writer(*args)
     args.each do |arg|
-      self.class_eval("def #{arg}=(val);@builder.#{arg}=val;end")
+      class_eval("def #{arg}=(val);@builder.#{arg}=val;end", __FILE__, __LINE__)
     end
   end
 end
@@ -49,6 +50,8 @@ module Libhoney
   # Note that by default, the max queue size is 1000.  If the queue gets bigger than that, we start dropping events.
   #
   class Client
+    API_HOST = 'https://api.honeycomb.io/'.freeze
+
     # Instantiates libhoney and prepares it to send events to Honeycomb.
     #
     # @param writekey [String] the write key from your honeycomb team (required)
@@ -61,7 +64,7 @@ module Libhoney
     def initialize(writekey: nil,
                    dataset: nil,
                    sample_rate: 1,
-                   api_host: 'https://api.honeycomb.io/',
+                   api_host: API_HOST,
                    user_agent_addition: nil,
                    transmission: nil,
                    block_on_send: false,
@@ -71,40 +74,41 @@ module Libhoney
                    max_concurrent_batches: 10,
                    pending_work_capacity: 1000)
       # check for insanity
-      raise Exception.new('libhoney:  max_concurrent_batches must be greater than 0') if max_concurrent_batches < 1
-      raise Exception.new('libhoney:  sample rate must be greater than 0') if sample_rate < 1
+      raise Exception, 'libhoney:  max_concurrent_batches must be greater than 0' if max_concurrent_batches < 1
+      raise Exception, 'libhoney:  sample rate must be greater than 0'            if sample_rate < 1
 
-      raise Exception.new("libhoney:  Ruby versions < 2.2 are not supported") if !Gem::Dependency.new("ruby", "~> 2.2").match?("ruby", RUBY_VERSION)
+      unless Gem::Dependency.new('ruby', '~> 2.2').match?('ruby', RUBY_VERSION)
+        raise Exception, 'libhoney:  Ruby versions < 2.2 are not supported'
+      end
+
       @builder = Builder.new(self, nil)
-      @builder.writekey = writekey
-      @builder.dataset = dataset
-      @builder.sample_rate = sample_rate
-      @builder.api_host = api_host
 
-      @tx = transmission
-      if !@tx && !(writekey && dataset)
+      @builder.writekey    = writekey
+      @builder.dataset     = dataset
+      @builder.sample_rate = sample_rate
+      @builder.api_host    = api_host
+
+      @transmission = transmission
+      if !@transmission && !(writekey && dataset)
         # if no writekey or dataset are configured, and we didn't override the
         # transmission (e.g. to a MockTransmissionClient), that's almost
         # certainly a misconfiguration, even though it's possible to override
         # them on a per-event basis. So let's handle the misconfiguration
-        # early rather than potentially throwing thousands of exceptions at
-        # runtime.
+        # early rather than potentially throwing thousands of exceptions at runtime.
         warn "#{self.class.name}: no #{writekey ? 'dataset' : 'writekey'} configured, disabling sending events"
-        @tx = NullTransmissionClient.new
+        @transmission = NullTransmissionClient.new
       end
 
       @user_agent_addition = user_agent_addition
 
-      @block_on_send = block_on_send
-      @block_on_responses = block_on_responses
-      @max_batch_size = max_batch_size
-      @send_frequency = send_frequency
+      @block_on_send          = block_on_send
+      @block_on_responses     = block_on_responses
+      @max_batch_size         = max_batch_size
+      @send_frequency         = send_frequency
       @max_concurrent_batches = max_concurrent_batches
-      @pending_work_capacity = pending_work_capacity
-      @responses = SizedQueue.new(2 * @pending_work_capacity)
-      @lock = Mutex.new
-
-      self
+      @pending_work_capacity  = pending_work_capacity
+      @responses              = SizedQueue.new(2 * @pending_work_capacity)
+      @lock                   = Mutex.new
     end
 
     builder_attr_accessor :writekey, :dataset, :sample_rate, :api_host
@@ -121,11 +125,11 @@ module Libhoney
       @builder.builder(fields, dyn_fields)
     end
 
-    ##
     # Nuke the queue and wait for inflight requests to complete before returning.
     # If you set drain=false, all queued requests will be dropped on the floor.
-    def close(drain=true)
-      return @tx.close(drain) if @tx
+    def close(drain = true)
+      return @transmission.close(drain) if @transmission
+
       0
     end
 
@@ -158,12 +162,12 @@ module Libhoney
     # adds a single field->dynamic value function to the global Builder.
     #
     # @param name [String] name of field to add.
-    # @param fn [#call] function that will be called to generate the value whenever an event is created.
+    # @param proc [#call] function that will be called to generate the value whenever an event is created.
     # @return [self] this libhoney instance.
     # @example
     #   honey.add_dynamic_field("active_threads", Proc.new { Thread.list.select {|thread| thread.status == "run"}.count })
-    def add_dynamic_field(name, fn)
-      @builder.add_dynamic_field(name, fn)
+    def add_dynamic_field(name, proc)
+      @builder.add_dynamic_field(name, proc)
       self
     end
 
@@ -180,12 +184,12 @@ module Libhoney
     # @param data [Hash<String=>any>] optional field->value mapping to add to the event sent.
     # @return [self] this libhoney instance.
     # @example empty send_now
-    #   honey.send_now() # sends just the data that has been added via add/add_field/add_dynamic_field.
+    #   honey.send_now # sends just the data that has been added via add/add_field/add_dynamic_field.
     # @example adding data at send-time
     #   honey.send_now {
     #     additionalField: value
     #   }
-    #/
+    # /
     def send_now(data = {})
       @builder.send_now(data)
       self
@@ -199,26 +203,28 @@ module Libhoney
     # @param event [Event] the event to send to honeycomb
     # @api private
     def send_event(event)
-      @lock.synchronize {
-        if !@tx
-          @tx = TransmissionClient.new(:max_batch_size => @max_batch_size,
-                                       :send_frequency => @send_frequency,
-                                       :max_concurrent_batches => @max_concurrent_batches,
-                                       :pending_work_capacity => @pending_work_capacity,
-                                       :responses => @responses,
-                                       :block_on_send => @block_on_send,
-                                       :block_on_responses => @block_on_responses,
-                                       :user_agent_addition => @user_agent_addition)
-        end
-      }
+      @lock.synchronize do
+        transmission_client_params = {
+          max_batch_size:         @max_batch_size,
+          send_frequency:         @send_frequency,
+          max_concurrent_batches: @max_concurrent_batches,
+          pending_work_capacity:  @pending_work_capacity,
+          responses:              @responses,
+          block_on_send:          @block_on_send,
+          block_on_responses:     @block_on_responses,
+          user_agent_addition:    @user_agent_addition
+        }
 
-      @tx.add(event)
+        @transmission ||= TransmissionClient.new(transmission_client_params)
+      end
+
+      @transmission.add(event)
     end
 
     # @api private
     def send_dropped_response(event, msg)
-      response = Response.new(:error => msg,
-                              :metadata => event.metadata)
+      response = Response.new(error: msg,
+                              metadata: event.metadata)
       begin
         @responses.enq(response, !@block_on_responses)
       rescue ThreadError

@@ -11,21 +11,21 @@ module Libhoney
     def initialize(libhoney, parent_builder, fields = {}, dyn_fields = {})
       @libhoney = libhoney
 
-      @fields = {}
+      @fields     = {}
       @dyn_fields = {}
 
-      if parent_builder != nil
-        @writekey = parent_builder.writekey
-        @dataset = parent_builder.dataset
+      unless parent_builder.nil?
+        @writekey    = parent_builder.writekey
+        @dataset     = parent_builder.dataset
         @sample_rate = parent_builder.sample_rate
-        @api_host = parent_builder.api_host
+        @api_host    = parent_builder.api_host
+
         @fields.merge!(parent_builder.fields)
         @dyn_fields.merge!(parent_builder.dyn_fields)
       end
 
       @fields.merge!(fields)
       @dyn_fields.merge!(dyn_fields)
-      self
     end
 
     # adds a group of field->values to the events created from this builder.
@@ -59,12 +59,12 @@ module Libhoney
     # adds a single field->dynamic value function, which is invoked to supply values when events are created from this builder.
     #
     # @param name [string] the name of the field to add to events.
-    # @param fn [#call] the function called to generate the value for this field.
+    # @param proc [#call] the function called to generate the value for this field.
     # @return [self] this Builder instance.
     # @example
     #   builder.add_dynamic_field("process_heapUsed", Proc.new { Thread.list.select {|thread| thread.status == "run"}.count })
-    def add_dynamic_field(name, fn)
-      @dyn_fields[name] = fn
+    def add_dynamic_field(name, proc)
+      @dyn_fields[name] = proc
     end
 
     # @deprecated
@@ -86,9 +86,9 @@ module Libhoney
     #     :additionalField => value
     #   }
     def send_now(data = {})
-      ev = self.event
+      ev = event
       ev.add(data)
-      ev.send()
+      ev.send
       self
     end
 
