@@ -7,6 +7,7 @@ module Libhoney
                    send_frequency: 100,
                    max_concurrent_batches: 10,
                    pending_work_capacity: 1000,
+                   send_timeout: 10,
                    responses: nil,
                    block_on_send: false,
                    block_on_responses: false,
@@ -19,6 +20,7 @@ module Libhoney
       @send_frequency         = send_frequency
       @max_concurrent_batches = max_concurrent_batches
       @pending_work_capacity  = pending_work_capacity
+      @send_timeout           = send_timeout
       @user_agent             = build_user_agent(user_agent_addition).freeze
 
       # use a SizedQueue so the producer will block on adding to the send_queue when @block_on_send is true
@@ -43,10 +45,12 @@ module Libhoney
 
     def send_loop
       http_clients = Hash.new do |h, api_host|
-        h[api_host] = HTTP.persistent(api_host).headers(
-          'User-Agent'   => @user_agent,
-          'Content-Type' => 'application/json'
-        )
+        h[api_host] = HTTP.timeout(connect: @send_timeout, write: @send_timeout, read: @send_timeout)
+                          .persistent(api_host)
+                          .headers(
+                            'User-Agent'   => @user_agent,
+                            'Content-Type' => 'application/json'
+                          )
       end
 
       # eat events until we run out
