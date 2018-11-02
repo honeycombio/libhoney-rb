@@ -31,33 +31,42 @@ module Libhoney
   # This is a library to allow you to send events to Honeycomb from within your
   # ruby application.
   #
-  # Example:
+  # note that by default, the max queue size is 1000.  if the queue gets bigger than that, we start dropping events.
+  #
+  # @example Send a simple event
   #   require 'libhoney'
-  #   honey = Libhoney.new(writekey, dataset, url, sample_rate, num_workers)
-  #   event = honey.event
-  #   event.add({'pglatency' => 100})
-  #   honey.send(event)
-  #   <repeat creating and sending events until your program is finished>
+  #   honey = Libhoney.new(writekey, dataset, sample_rate)
+  #
+  #   evt = honey.event
+  #   evt.add(pglatency: 100)
+  #   honey.send(evt)
+  #
+  #   # repeat creating and sending events until your program is finished
+  #
   #   honey.close
   #
-  # Arguments:
-  # * *writekey* is the key to use the Honeycomb service (required)
-  # * *dataset* is the dataset to write into (required)
-  # * *sample_rate* is how many samples you want to keep.  IE:  1 means you want 1 out of 1 samples kept, or all of them.  10 means you want 1 out of 10 samples kept.  And so on.
-  # * *url* is the url to connect to Honeycomb
-  # * *num_workers* is the number of threads working on the queue of events you are generating
+  # @example Override the default timestamp on an event
+  #   one_hour_ago = Time.now - 3600
   #
-  # Note that by default, the max queue size is 1000.  If the queue gets bigger than that, we start dropping events.
+  #   evt = libhoney.event
+  #   evt.add_fields(useful_fields)
+  #   evt.timestamp = one_hour_ago
+  #   evt.send
   #
   class Client
     API_HOST = 'https://api.honeycomb.io/'.freeze
 
     # Instantiates libhoney and prepares it to send events to Honeycomb.
     #
-    # @param writekey [String] the write key from your honeycomb team (required)
-    # @param dataset [String] the dataset you want (required)
-    # @param sample_rate [Fixnum] cause libhoney to send 1 out of sampleRate events.  overrides the libhoney instance's value.
-    # @param api_host [String] the base url to send events to
+    # @param writekey [String] the Honeycomb API key with which to authenticate
+    #   this request (required)
+    # @param dataset [String] the Honeycomb dataset into which to send events (required)
+    # @param sample_rate [Fixnum] cause +libhoney+ to send 1 out of +sample_rate+ events.
+    #   overrides the libhoney instance's value.  (e.g. setting this to +10+ will result in
+    #   a 1-in-10 chance of it being successfully emitted to Honeycomb, and the
+    #   Honeycomb query engine will interpret it as representative of 10 events)
+    # @param api_host [String] defaults to +API_HOST+, override to change the
+    #   destination for these Honeycomb events.
     # @param transmission [Object] transport used to actually send events. If nil (the default), will be lazily initialized with a {TransmissionClient} on first event send.
     # @param block_on_send [Boolean] if more than pending_work_capacity events are written, block sending further events
     # @param block_on_responses [Boolean] if true, block if there is no thread reading from the response queue

@@ -1,11 +1,44 @@
 module Libhoney
-  ##
   # This is the event object that you can fill up with data.
+  #
+  # @example Override the default timestamp on an event
+  #   evt = libhoney.event
+  #   evt.add_fields(useful_fields)
+  #   evt.timestamp = Time.now
+  #   evt.send
+  #
   class Event
-    attr_accessor :writekey, :dataset, :sample_rate, :api_host
-    attr_accessor :timestamp, :metadata
+    # @return [String] the Honeycomb API key with which to authenticate this
+    #   request
+    attr_accessor :writekey
 
-    # @return [Hash<String=>any>] the fields in this event
+    # @return [String] the Honeycomb dataset this event is destined for
+    #   (defaults to the +Builder+'s +dataset+, which in turn defaults to the
+    #   +Client+'s +dataset+)
+    attr_accessor :dataset
+
+    # @return [Fixnum] Set this attribute to indicate that it represents
+    #   +sample_rate+ number of events (e.g. setting this to +10+ will result in
+    #   a 1-in-10 chance of it being successfully emitted to Honeycomb, and the
+    #   Honeycomb query engine will interpret it as representative of 10 events)
+    attr_accessor :sample_rate
+
+    # @return [String] Set this attribute in order to override the destination
+    #   of these Honeycomb events (defaults to +Client::API_HOST+).
+    attr_accessor :api_host
+
+    # @return [Object] Set this attribute to any +Object+ you might need to
+    #   identify this Event as it is returned to the responses queue (e.g. tag
+    #   an Event with an internal ID in order to retry something specific on
+    #   failure).
+    attr_accessor :metadata
+
+    # @return [Time] Set this attribute in order to override the timestamp
+    #   associated with the event (defaults to the +Time.now+ at +Event+
+    #   creation)
+    attr_accessor :timestamp
+
+    # @return [Hash<String=>any>] the fields added to this event
     attr_reader :data
 
     # @api private
@@ -71,7 +104,7 @@ module Libhoney
       self
     end
 
-    # sends this event to honeycomb
+    # sends this event to Honeycomb
     #
     # @return [self] this event.
     def send
@@ -84,7 +117,7 @@ module Libhoney
       send_presampled
     end
 
-    # sends a presampled event to honeycomb
+    # sends a presampled event to Honeycomb
     #
     # @return [self] this event.
     def send_presampled
