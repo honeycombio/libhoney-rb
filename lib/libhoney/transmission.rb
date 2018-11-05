@@ -48,7 +48,7 @@ module Libhoney
         h[api_host] = HTTP.timeout(connect: @send_timeout, write: @send_timeout, read: @send_timeout)
                           .persistent(api_host)
                           .headers(
-                            'User-Agent'   => @user_agent,
+                            'User-Agent' => @user_agent,
                             'Content-Type' => 'application/json'
                           )
       end
@@ -67,9 +67,9 @@ module Libhoney
           resp = http.post(url,
                            json: event.data,
                            headers: {
-                             'X-Honeycomb-Team'       => event.writekey,
+                             'X-Honeycomb-Team' => event.writekey,
                              'X-Honeycomb-SampleRate' => event.sample_rate,
-                             'X-Event-Time'           => event.timestamp.iso8601(3)
+                             'X-Event-Time' => event.timestamp.iso8601(3)
                            })
 
           # "You must consume response before sending next request via persistent connection"

@@ -31,7 +31,7 @@ def run_factorial(low, high, libh_builder)
 end
 
 libhoney = Libhoney::Client.new(writekey: writekey,
-                                dataset:  dataset)
+                                dataset: dataset)
 
 Thread.new do
   begin
