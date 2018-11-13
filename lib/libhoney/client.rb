@@ -29,9 +29,7 @@ end
 module Libhoney
   ##
   # This is a library to allow you to send events to Honeycomb from within your
-  # ruby application.
-  #
-  # note that by default, the max queue size is 1000.  if the queue gets bigger than that, we start dropping events.
+  # Ruby application.
   #
   # @example Send a simple event
   #   require 'libhoney'
@@ -70,6 +68,8 @@ module Libhoney
     # @param transmission [Object] transport used to actually send events. If nil (the default), will be lazily initialized with a {TransmissionClient} on first event send.
     # @param block_on_send [Boolean] if more than pending_work_capacity events are written, block sending further events
     # @param block_on_responses [Boolean] if true, block if there is no thread reading from the response queue
+    # @param pending_work_capacity [Fixnum] defaults to 1000. If the queue of
+    #   pending events exceeds 1000, this client will start dropping events.
     def initialize(writekey: nil,
                    dataset: nil,
                    sample_rate: 1,
