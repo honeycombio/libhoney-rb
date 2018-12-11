@@ -19,7 +19,7 @@ Metrics/ClassLength:
     - test/*
 
 Metrics/MethodLength:
-  Max: 25
+  Max: 35
   Exclude:
     - lib/libhoney/transmission.rb
     - test/*

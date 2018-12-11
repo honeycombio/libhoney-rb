@@ -210,6 +210,7 @@ class LibhoneyTest < Minitest::Test
     event = @honey.event
     event.dataset = 'mydataset-send'
     event.add('argle' => 'bargle')
+    event.add('invalid_characters' => "\x89")
     event.send
 
     assert_instance_of Libhoney::Event, event

@@ -14,17 +14,17 @@ Lint/HandleExceptions:
 
 # Offense count: 7
 Metrics/AbcSize:
-  Max: 35
+  Max: 40
 
 # Offense count: 1
 # Configuration parameters: CountComments, ExcludedMethods.
 # ExcludedMethods: refine
 Metrics/BlockLength:
-  Max: 27
+  Max: 30
 
 # Offense count: 2
 Metrics/CyclomaticComplexity:
-  Max: 8
+  Max: 12
 
 # Offense count: 2
 # Configuration parameters: CountKeywordArgs.
@@ -33,4 +33,4 @@ Metrics/ParameterLists:
 
 # Offense count: 1
 Metrics/PerceivedComplexity:
-  Max: 8
+  Max: 10
