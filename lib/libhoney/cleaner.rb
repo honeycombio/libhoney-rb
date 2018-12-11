@@ -1,9 +1,7 @@
 module Libhoney
   module Cleaner
     ENCODING_OPTIONS = { invalid: :replace, undef: :replace }.freeze
-    FILTERED = '[FILTERED]'.freeze
     RECURSION = '[RECURSION]'.freeze
-    OBJECT = '[OBJECT]'.freeze
     RAISED = '[RAISED]'.freeze
 
     def clean_data(data, seen = {})
@@ -33,15 +31,11 @@ module Libhoney
                 clean_string(data)
               else
                 str = begin
-                        obj.to_s
+                        data.to_s
                       rescue StandardError
                         RAISED
                       end
-                if str =~ /#<.*>/
-                  OBJECT
-                else
-                  clean_string(str)
-                end
+                clean_string(str)
               end
 
       seen[data] = value if protection
