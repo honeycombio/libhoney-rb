@@ -290,6 +290,7 @@ class LibhoneyTest < Minitest::Test
     20.times do
       response = @honey.responses.pop
       assert_kind_of(Exception, response.error)
+      assert_kind_of(HTTP::Response::Status, response.status_code)
     end
 
     @honey.send_now('argle' => 'bargle')
