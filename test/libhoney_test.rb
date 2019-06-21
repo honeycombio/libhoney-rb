@@ -1,7 +1,23 @@
+require 'json'
+require 'stringio'
 require 'minitest/autorun'
 require 'minitest/mock'
 require 'libhoney'
 require 'webmock/minitest'
+require 'sinatra/base'
+require 'sinatra/json'
+
+class HoneycombServer < Sinatra::Base
+  set :json_encoder, :to_json
+
+  before do
+    @batch = JSON.parse(request.body.read.to_s)
+  end
+
+  post '/1/batch/:dataset' do
+    json(@batch.map { { status: 202 } })
+  end
+end
 
 class LibhoneyDefaultTest < Minitest::Test
   def setup
@@ -111,7 +127,7 @@ class LibhoneyBuilderTest < Minitest::Test
 
   def test_send_now
     stub_request(:post, 'http://example.com/1/batch/dataset')
-      .to_return(status: 200, body: 'OK')
+      .to_rack(HoneycombServer)
 
     builder = @honey.builder
     builder.send_now('argle' => 'bargle')
@@ -168,16 +184,9 @@ class LibhoneyTest < Minitest::Test
   def test_send
     # do 900 so that we fit under the queue size and don't drop events
     times_to_test = 900
-    events = []
+    events = 0
 
-    stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset-send').to_return do |req|
-      events += JSON.parse(req.body)
-
-      {
-        status: 200,
-        body: 'OK'
-      }
-    end
+    stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset-send').to_rack(HoneycombServer)
 
     event = @honey.event
     event.dataset = 'mydataset-send'
@@ -186,20 +195,30 @@ class LibhoneyTest < Minitest::Test
 
     assert_instance_of Libhoney::Event, event
 
-    (1...times_to_test).each do |i|
+    @honey.close
+    @honey.responses.clear
+
+    t = Thread.new do
+      events += 1 while @honey.responses.pop
+    end
+
+    (1..times_to_test).each do |i|
       event = @honey.event
       event.dataset = 'mydataset-send'
       event.add('test' => i)
       event.send
     end
+
     @honey.close
 
-    assert_equal times_to_test, events.count
+    t.join
+
+    assert_equal times_to_test, events
   end
 
   def test_send_now
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
-      .to_return(status: 200, body: 'OK')
+      .to_rack(HoneycombServer)
 
     @honey.send_now('argle' => 'bargle')
 
@@ -212,7 +231,7 @@ class LibhoneyTest < Minitest::Test
     times_to_test = 900
 
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset-close')
-      .to_return(status: 200, body: 'OK')
+      .to_rack(HoneycombServer)
 
     (1..times_to_test).each do |i|
       event = @honey.event
@@ -227,7 +246,7 @@ class LibhoneyTest < Minitest::Test
 
   def test_response_metadata
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset-response_metadata')
-      .to_return(status: 200, body: 'OK')
+      .to_rack(HoneycombServer)
 
     builder = @honey.builder
     builder.dataset = 'mydataset-response_metadata'
@@ -299,19 +318,19 @@ class LibhoneyTest < Minitest::Test
     end
 
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
-      .to_return(status: 200, body: 'OK')
+      .to_rack(HoneycombServer)
 
     @honey.send_now('argle' => 'bargle')
 
     response = @honey.responses.pop
-    assert_equal(200, response.status_code)
+    assert_equal(202, response.status_code)
 
     @honey.close
   end
 
   def test_dataset_quoting
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset%20send')
-      .to_return(status: 200, body: 'OK')
+      .to_rack(HoneycombServer)
 
     event = @honey.event
     event.dataset = 'mydataset send'
@@ -327,7 +346,7 @@ end
 class LibhoneyUserAgentTest < Minitest::Test
   def setup
     stub_request(:post, 'https://api.honeycomb.io/1/batch/somedataset')
-      .to_return(status: 200, body: 'OK')
+      .to_rack(HoneycombServer)
   end
 
   def test_default_user_agent

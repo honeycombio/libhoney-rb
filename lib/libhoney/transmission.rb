@@ -1,3 +1,4 @@
+require 'json'
 require 'timeout'
 require 'libhoney/response'
 
@@ -59,44 +60,30 @@ module Libhoney
 
         begin
           http = http_clients[api_host]
-          url  = '/1/batch/' + Addressable::URI.escape(dataset)
+          body = serialize_batch(batch)
+          next if body.nil?
 
-          data = batch.map do |e|
-            {
-              time: e.timestamp.iso8601(3),
-              samplerate: e.sample_rate,
-              data: e.data
-            }
-          end
+          headers = {
+            'Content-Type' => 'application/json',
+            'X-Honeycomb-Team' => writekey
+          }
 
-          resp = http.post(url,
-                           json: data,
-                           headers: {
-                             'X-Honeycomb-Team' => writekey
-                           })
-
-          # "You must consume response before sending next request via persistent connection"
-          # https://github.com/httprb/http/wiki/Persistent-Connections-%28keep-alive%29#note-using-persistent-requests-correctly
-          resp.flush
-
-          response = Response.new(status_code: resp.status)
+          response = http.post(
+            "/1/batch/#{Addressable::URI.escape(dataset)}",
+            body: body,
+            headers: headers
+          )
+          process_response(response, before, batch)
         rescue Exception => error
           # catch a broader swath of exceptions than is usually good practice,
           # because this is effectively the top-level exception handler for the
           # sender threads, and we don't want those threads to die (leaving
           # nothing consuming the queue).
           response = Response.new(error: error)
-        ensure
-          if response
-            response.duration = Time.now - before
-            # response.metadata = event.metadata
+          begin
+            @responses.enq(response, !@block_on_responses)
+          rescue ThreadError
           end
-        end
-
-        begin
-          @responses.enq(response, !@block_on_responses) if response
-        rescue ThreadError
-          # happens if the queue was full and block_on_send = false.
         end
       end
     ensure
@@ -116,7 +103,7 @@ module Libhoney
         @send_queue.clear
       end
 
-      @batch_queue << nil
+      @batch_queue.enq(nil)
       @batch_thread.join
 
       # send @threads.length number of nils so each thread will fall out of send_loop
@@ -154,6 +141,51 @@ module Libhoney
     end
 
     private
+
+    def process_response(http_response, before, batch)
+      http_response.parse.each_with_index do |event, i|
+        Response.new(status_code: event['status']).tap do |response|
+          response.duration = Time.now - before
+          if i < batch.size && (batched_event = batch[i])
+            response.metadata = batched_event.metadata
+          end
+          begin
+            @responses.enq(response, !@block_on_responses)
+          rescue ThreadError
+          end
+        end
+      end
+    end
+
+    def serialize_batch(batch)
+      payload = []
+      batch.map! do |event|
+        begin
+          e = {
+            time: event.timestamp.iso8601(3),
+            samplerate: event.sample_rate,
+            data: event.data
+          }
+          payload << JSON.generate(e)
+
+          event
+        rescue StandardError => err
+          Response.new(error: err).tap do |response|
+            response.metadata = event.metadata
+            begin
+              @responses.enq(response, !@block_on_responses)
+            rescue ThreadError
+            end
+          end
+
+          nil
+        end
+      end
+
+      return if payload.empty?
+
+      "[#{payload.join(',')}]"
+    end
 
     def build_user_agent(user_agent_addition)
       ua = "libhoney-rb/#{VERSION}"

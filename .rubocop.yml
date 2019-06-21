@@ -14,7 +14,7 @@ Metrics/BlockLength:
   Max: 35
 
 Metrics/ClassLength:
-  Max: 150
+  Max: 200
   Exclude:
     - test/*
 
