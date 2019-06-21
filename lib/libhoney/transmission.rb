@@ -74,12 +74,12 @@ module Libhoney
             headers: headers
           )
           process_response(response, before, batch)
-        rescue Exception => error
+        rescue Exception => e
           # catch a broader swath of exceptions than is usually good practice,
           # because this is effectively the top-level exception handler for the
           # sender threads, and we don't want those threads to die (leaving
           # nothing consuming the queue).
-          response = Response.new(error: error)
+          response = Response.new(error: e)
           begin
             @responses.enq(response, !@block_on_responses)
           rescue ThreadError
@@ -169,8 +169,8 @@ module Libhoney
           payload << JSON.generate(e)
 
           event
-        rescue StandardError => err
-          Response.new(error: err).tap do |response|
+        rescue StandardError => e
+          Response.new(error: e).tap do |response|
             response.metadata = event.metadata
             begin
               @responses.enq(response, !@block_on_responses)
