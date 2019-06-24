@@ -26,10 +26,10 @@ module Libhoney
       @send_timeout           = send_timeout
       @user_agent             = build_user_agent(user_agent_addition).freeze
 
-      # use a SizedQueue so the producer will block on adding to the send_queue when @block_on_send is true
       @send_queue   = Queue.new
       @threads      = []
       @lock         = Mutex.new
+      # use a SizedQueue so the producer will block on adding to the batch_queue when @block_on_send is true
       @batch_queue  = SizedQueue.new(@pending_work_capacity)
       @batch_thread = nil
     end
