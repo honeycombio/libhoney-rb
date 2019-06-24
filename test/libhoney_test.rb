@@ -305,7 +305,9 @@ class LibhoneyTest < Minitest::Test
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
       .to_raise('the network is dark and full of errors')
 
-    20.times do
+    error_count = 20
+
+    error_count.times do
       event = @honey.event
       event.add_field 'hi', 'bye'
       event.send
@@ -314,9 +316,12 @@ class LibhoneyTest < Minitest::Test
     @honey.close
 
     while (response = @honey.responses.pop)
+      error_count -= 1
       assert_kind_of(Exception, response.error)
       assert_kind_of(HTTP::Response::Status, response.status_code)
     end
+
+    assert_equal(0, error_count)
 
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
       .to_rack(HoneycombServer)
