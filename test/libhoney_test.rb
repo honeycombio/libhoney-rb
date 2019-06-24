@@ -186,7 +186,8 @@ class LibhoneyTest < Minitest::Test
     times_to_test = 900
     events = 0
 
-    stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset-send').to_rack(HoneycombServer)
+    stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset-send')
+      .to_rack(HoneycombServer)
 
     event = @honey.event
     event.dataset = 'mydataset-send'
