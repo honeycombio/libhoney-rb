@@ -79,9 +79,20 @@ module Libhoney
           # because this is effectively the top-level exception handler for the
           # sender threads, and we don't want those threads to die (leaving
           # nothing consuming the queue).
-          response = Response.new(error: e)
           begin
-            @responses.enq(response, !@block_on_responses)
+            batch.each do |event|
+              # nil events in the batch should already have had an error
+              # response enqueued in #serialize_batch
+              next if event.nil?
+
+              Response.new(error: e).tap do |error_response|
+                error_response.metadata = event.metadata
+                begin
+                  @responses.enq(error_response, !@block_on_responses)
+                rescue ThreadError
+                end
+              end
+            end
           rescue ThreadError
           end
         end
@@ -143,12 +154,14 @@ module Libhoney
     private
 
     def process_response(http_response, before, batch)
-      http_response.parse.each_with_index do |event, i|
+      index = 0
+      http_response.parse.each do |event|
+        index += 1 while batch[index].nil? && index < batch.size
+        break unless (batched_event = batch[index])
+
         Response.new(status_code: event['status']).tap do |response|
           response.duration = Time.now - before
-          if i < batch.size && (batched_event = batch[i])
-            response.metadata = batched_event.metadata
-          end
+          response.metadata = batched_event.metadata
           begin
             @responses.enq(response, !@block_on_responses)
           rescue ThreadError

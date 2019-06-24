@@ -334,6 +334,40 @@ class LibhoneyTest < Minitest::Test
     @honey.close
   end
 
+  def test_json_error_handling
+    stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
+      .to_rack(HoneycombServer)
+
+    # simlulate an error generating json for an event
+    json_generate = proc do |o|
+      o[:data][:error] && raise(StandardError, 'no JSON for you')
+
+      '{}'
+    end
+
+    JSON.stub :generate, json_generate do
+      @honey.event.tap do |event|
+        event.add_field(:error, true)
+        event.metadata = 1
+        event.send
+      end
+      @honey.event.tap do |event|
+        event.add_field(:error, false)
+        event.metadata = 2
+        event.send
+      end
+
+      response = @honey.responses.pop
+      assert_equal(1, response.metadata)
+      assert_kind_of(Exception, response.error)
+      assert_kind_of(HTTP::Response::Status, response.status_code)
+
+      response = @honey.responses.pop
+      assert_equal(2, response.metadata)
+      assert_kind_of(HTTP::Response::Status, response.status_code)
+    end
+  end
+
   def test_dataset_quoting
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset%20send')
       .to_rack(HoneycombServer)

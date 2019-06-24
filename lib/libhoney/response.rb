@@ -5,11 +5,11 @@ module Libhoney
     attr_accessor :duration, :status_code, :metadata, :error
 
     def initialize(duration: 0,
-                   status_code: HTTP::Response::Status.new(0),
+                   status_code: 0,
                    metadata: nil,
                    error: nil)
       @duration    = duration
-      @status_code = status_code
+      @status_code = HTTP::Response::Status.new(status_code)
       @metadata    = metadata
       @error       = error
     end
