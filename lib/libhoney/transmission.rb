@@ -1,3 +1,5 @@
+require 'json'
+require 'timeout'
 require 'libhoney/response'
 
 module Libhoney
@@ -17,16 +19,19 @@ module Libhoney
       @block_on_send          = block_on_send
       @block_on_responses     = block_on_responses
       @max_batch_size         = max_batch_size
-      @send_frequency         = send_frequency
+      # convert to seconds
+      @send_frequency         = send_frequency.fdiv(1000)
       @max_concurrent_batches = max_concurrent_batches
       @pending_work_capacity  = pending_work_capacity
       @send_timeout           = send_timeout
       @user_agent             = build_user_agent(user_agent_addition).freeze
 
-      # use a SizedQueue so the producer will block on adding to the send_queue when @block_on_send is true
-      @send_queue = SizedQueue.new(@pending_work_capacity)
-      @threads    = []
-      @lock       = Mutex.new
+      @send_queue   = Queue.new
+      @threads      = []
+      @lock         = Mutex.new
+      # use a SizedQueue so the producer will block on adding to the batch_queue when @block_on_send is true
+      @batch_queue  = SizedQueue.new(@pending_work_capacity)
+      @batch_thread = nil
     end
 
     def add(event)
@@ -35,7 +40,7 @@ module Libhoney
       raise ArgumentError, "No Dataset for Honeycomb. Can't send datasetless."          if event.dataset  == ''
 
       begin
-        @send_queue.enq(event, !@block_on_send)
+        @batch_queue.enq(event, !@block_on_send)
       rescue ThreadError
         # happens if the queue was full and block_on_send = false.
       end
@@ -44,56 +49,52 @@ module Libhoney
     end
 
     def send_loop
-      http_clients = Hash.new do |h, api_host|
-        h[api_host] = HTTP.timeout(connect: @send_timeout, write: @send_timeout, read: @send_timeout)
-                          .persistent(api_host)
-                          .headers(
-                            'User-Agent' => @user_agent,
-                            'Content-Type' => 'application/json'
-                          )
-      end
+      http_clients = build_http_clients
 
       # eat events until we run out
       loop do
-        event = @send_queue.pop
-        break if event.nil?
+        api_host, writekey, dataset, batch = @send_queue.pop
+        break if batch.nil?
 
         before = Time.now
 
         begin
-          http = http_clients[event.api_host]
-          url  = '/1/events/' + Addressable::URI.escape(event.dataset.dup)
+          http = http_clients[api_host]
+          body = serialize_batch(batch)
+          next if body.nil?
 
-          resp = http.post(url,
-                           json: event.data,
-                           headers: {
-                             'X-Honeycomb-Team' => event.writekey,
-                             'X-Honeycomb-SampleRate' => event.sample_rate,
-                             'X-Event-Time' => event.timestamp.iso8601(3)
-                           })
+          headers = {
+            'Content-Type' => 'application/json',
+            'X-Honeycomb-Team' => writekey
+          }
 
-          # "You must consume response before sending next request via persistent connection"
-          # https://github.com/httprb/http/wiki/Persistent-Connections-%28keep-alive%29#note-using-persistent-requests-correctly
-          resp.flush
-
-          response = Response.new(status_code: resp.status)
-        rescue Exception => error
+          response = http.post(
+            "/1/batch/#{Addressable::URI.escape(dataset)}",
+            body: body,
+            headers: headers
+          )
+          process_response(response, before, batch)
+        rescue Exception => e
           # catch a broader swath of exceptions than is usually good practice,
           # because this is effectively the top-level exception handler for the
           # sender threads, and we don't want those threads to die (leaving
           # nothing consuming the queue).
-          response = Response.new(error: error)
-        ensure
-          if response
-            response.duration = Time.now - before
-            response.metadata = event.metadata
-          end
-        end
+          begin
+            batch.each do |event|
+              # nil events in the batch should already have had an error
+              # response enqueued in #serialize_batch
+              next if event.nil?
 
-        begin
-          @responses.enq(response, !@block_on_responses) if response
-        rescue ThreadError
-          # happens if the queue was full and block_on_send = false.
+              Response.new(error: e).tap do |error_response|
+                error_response.metadata = event.metadata
+                begin
+                  @responses.enq(error_response, !@block_on_responses)
+                rescue ThreadError
+                end
+              end
+            end
+          rescue ThreadError
+          end
         end
       end
     ensure
@@ -108,7 +109,13 @@ module Libhoney
 
     def close(drain)
       # if drain is false, clear the remaining unprocessed events from the queue
-      @send_queue.clear if drain == false
+      unless drain
+        @batch_queue.clear
+        @send_queue.clear
+      end
+
+      @batch_queue.enq(nil)
+      @batch_thread.join
 
       # send @threads.length number of nils so each thread will fall out of send_loop
       @threads.length.times { @send_queue << nil }
@@ -121,7 +128,77 @@ module Libhoney
       0
     end
 
+    def batch_loop
+      next_send_time = Time.now + @send_frequency
+      batched_events = Hash.new do |h, key|
+        h[key] = []
+      end
+
+      loop do
+        begin
+          while (event = Timeout.timeout(@send_frequency) { @batch_queue.pop })
+            key = [event.api_host, event.writekey, event.dataset]
+            batched_events[key] << event
+          end
+
+          break
+        rescue Exception
+        ensure
+          next_send_time = flush_batched_events(batched_events) if Time.now > next_send_time
+        end
+      end
+
+      flush_batched_events(batched_events)
+    end
+
     private
+
+    def process_response(http_response, before, batch)
+      index = 0
+      http_response.parse.each do |event|
+        index += 1 while batch[index].nil? && index < batch.size
+        break unless (batched_event = batch[index])
+
+        Response.new(status_code: event['status']).tap do |response|
+          response.duration = Time.now - before
+          response.metadata = batched_event.metadata
+          begin
+            @responses.enq(response, !@block_on_responses)
+          rescue ThreadError
+          end
+        end
+      end
+    end
+
+    def serialize_batch(batch)
+      payload = []
+      batch.map! do |event|
+        begin
+          e = {
+            time: event.timestamp.iso8601(3),
+            samplerate: event.sample_rate,
+            data: event.data
+          }
+          payload << JSON.generate(e)
+
+          event
+        rescue StandardError => e
+          Response.new(error: e).tap do |response|
+            response.metadata = event.metadata
+            begin
+              @responses.enq(response, !@block_on_responses)
+            rescue ThreadError
+            end
+          end
+
+          nil
+        end
+      end
+
+      return if payload.empty?
+
+      "[#{payload.join(',')}]"
+    end
 
     def build_user_agent(user_agent_addition)
       ua = "libhoney-rb/#{VERSION}"
@@ -131,8 +208,31 @@ module Libhoney
 
     def ensure_threads_running
       @lock.synchronize do
+        @batch_thread = Thread.new { batch_loop } unless @batch_thread && @batch_thread.alive?
         @threads.select!(&:alive?)
         @threads << Thread.new { send_loop } while @threads.length < @max_concurrent_batches
+      end
+    end
+
+    def flush_batched_events(batched_events)
+      batched_events.each do |(api_host, writekey, dataset), events|
+        events.each_slice(@max_batch_size) do |batch|
+          @send_queue << [api_host, writekey, dataset, batch]
+        end
+      end
+      batched_events.clear
+
+      Time.now + @send_frequency
+    end
+
+    def build_http_clients
+      Hash.new do |h, api_host|
+        h[api_host] = HTTP.timeout(connect: @send_timeout, write: @send_timeout, read: @send_timeout)
+                          .persistent(api_host)
+                          .headers(
+                            'User-Agent' => @user_agent,
+                            'Content-Type' => 'application/json'
+                          )
       end
     end
   end

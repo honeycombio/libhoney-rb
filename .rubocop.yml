@@ -10,7 +10,11 @@ Lint/RescueException:
   Exclude:
     - 'lib/libhoney/transmission.rb'
 
+Metrics/BlockLength:
+  Max: 35
+
 Metrics/ClassLength:
+  Max: 200
   Exclude:
     - test/*
 
