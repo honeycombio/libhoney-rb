@@ -71,7 +71,7 @@ workflows:
             - ruby-2.5
             - ruby-2.6
           filters:
-              tags:
-                only: /.+/
-
-
+            tags:
+              only: /.+/
+            branches:
+              ignore: /.*/
