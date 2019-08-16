@@ -40,22 +40,21 @@ jobs:
     docker:
       - image: circleci/ruby:2.6
     steps: *test_steps
-
-publish:
-  docker:
-    # Just randomly pick one recent ruby version
-    - image: circleci/ruby:2.6
-  working_directory: ~/repo
-  steps:
-    - checkout
-    - run:
-        name: Setup Rubygems
-        command: bash .circleci/setup-rubygems.sh
-    - run:
-        name: Publish to Rubygems
-        command: |
-          gem build libhoney.gemspec
-          gem push "libhoney-$(git describe --tags).gem"
+  publish: 
+    docker:
+      # Just randomly pick one recent ruby version
+      - image: circleci/ruby:2.6
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: Setup Rubygems
+          command: bash .circleci/setup-rubygems.sh
+      - run:
+          name: Publish to Rubygems
+          command: |
+            gem build libhoney.gemspec
+            gem push "libhoney-$(git describe --tags).gem"
 
 workflows:
   version: 2
@@ -74,6 +73,5 @@ workflows:
           filters:
               tags:
                 only: /.+/
-              branches:
-                ignore: /.*/
+
 
