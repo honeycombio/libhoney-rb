@@ -409,8 +409,4 @@ class LibhoneyUserAgentTest < Minitest::Test
                      'https://api.honeycomb.io/1/batch/somedataset',
                      headers: { 'User-Agent': %r{libhoney-rb/.* test/4.2} }
   end
-
-  def test_test_failure_actually_failts_build
-    assert_equal false, true
-  end
 end
