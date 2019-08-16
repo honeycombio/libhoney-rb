@@ -54,7 +54,7 @@ jobs:
           name: Publish to Rubygems
           command: |
             gem build libhoney.gemspec
-            gem push "libhoney-$(git describe --tags).gem"
+            gem push "libhoney-$(git describe --tags | cut -d "v" -f 2).gem"
 
 workflows:
   version: 2
