@@ -53,7 +53,6 @@ module Libhoney
   #
   class Client
     API_HOST = 'https://api.honeycomb.io/'.freeze
-    RUBOCOP_TEST_FAILURE = "doot doot doot i'm such a long line nobody knows that multitudes i contain iliterally go on almost forever what a joy to behold"
 
     # Instantiates libhoney and prepares it to send events to Honeycomb.
     #
