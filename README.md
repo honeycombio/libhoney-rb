@@ -1,4 +1,4 @@
-# libhoney [![Build Status](https://travis-ci.org/honeycombio/libhoney-rb.svg?branch=master)](https://travis-ci.org/honeycombio/libhoney-rb) [![Gem Version](https://badge.fury.io/rb/libhoney.svg)](https://badge.fury.io/rb/libhoney)
+# libhoney [![CircleCI Build Status](https://circleci.com/gh/honeycombio/libhoney-rb.svg?style=svg)](https://circleci.com/gh/honeycombio/libhoney-rb) [![Gem Version](https://badge.fury.io/rb/libhoney.svg)](https://badge.fury.io/rb/libhoney)
 
 Ruby gem for sending events to [Honeycomb](https://www.honeycomb.io), a service for debugging your software in production.
 
@@ -19,7 +19,7 @@ All contributions will be released under the Apache License 2.0.
 
 ### Releasing a new version
 
-Travis will automatically upload tagged releases to Rubygems. To release a new
+CircleCI will automatically upload tagged releases to Rubygems. To release a new
 version, run
 ```
 bump patch --tag   # Or bump minor --tag, etc.
