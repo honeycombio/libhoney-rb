@@ -255,25 +255,17 @@ class LibhoneyTest < Minitest::Test
 
     event = builder.event
     event.metadata = 42
-
-    t = Thread.new do
-      resp = @honey.responses.pop
-      assert_equal 42, resp.metadata
-    end
-
     event.send
-    t.join
+
+    resp = @honey.responses.pop
+    assert_equal 42, resp.metadata
 
     event = builder.event
     event.metadata = 'string'
-
-    t = Thread.new do
-      resp = @honey.responses.pop
-      assert_equal 'string', resp.metadata
-    end
-
     event.send
-    t.join
+
+    resp = @honey.responses.pop
+    assert_equal 'string', resp.metadata
   end
 
   def check_and_drop(expected)
@@ -315,14 +307,6 @@ class LibhoneyTest < Minitest::Test
 
     error_count = 20
 
-    t = Thread.new do
-      while (response = @honey.responses.pop)
-        error_count -= 1
-        assert_kind_of(Exception, response.error)
-        assert_kind_of(HTTP::Response::Status, response.status_code)
-      end
-    end
-
     error_count.times do
       event = @honey.event
       event.add_field 'hi', 'bye'
@@ -330,23 +314,24 @@ class LibhoneyTest < Minitest::Test
     end
 
     @honey.close
-    t.join
+
+    while (response = @honey.responses.pop)
+      error_count -= 1
+      assert_kind_of(Exception, response.error)
+      assert_kind_of(HTTP::Response::Status, response.status_code)
+    end
 
     assert_equal(0, error_count)
 
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
       .to_rack(HoneycombServer)
 
-    t = Thread.new do
-      while (response = @honey.responses.pop)
-        assert_equal(202, response.status_code)
-      end
-    end
-
     @honey.send_now('argle' => 'bargle')
-    @honey.close
 
-    t.join
+    response = @honey.responses.pop
+    assert_equal(202, response.status_code)
+
+    @honey.close
   end
 
   def test_json_error_handling
@@ -361,38 +346,25 @@ class LibhoneyTest < Minitest::Test
     end
 
     JSON.stub :generate, json_generate do
-      t = Thread.new do
-        responses = []
-        while (response = @honey.responses.pop)
-          responses << response
-        end
-
-        assert_equal(2, responses.size)
-
-        response = responses[0]
-        assert_equal(1, response.metadata)
-        assert_kind_of(Exception, response.error)
-        assert_kind_of(HTTP::Response::Status, response.status_code)
-
-        response = responses[1]
-        assert_equal(2, response.metadata)
-        assert_kind_of(HTTP::Response::Status, response.status_code)
-      end
-
       @honey.event.tap do |event|
         event.add_field(:error, true)
         event.metadata = 1
         event.send
       end
-
       @honey.event.tap do |event|
         event.add_field(:error, false)
         event.metadata = 2
         event.send
       end
 
-      @honey.close
-      t.join
+      response = @honey.responses.pop
+      assert_equal(1, response.metadata)
+      assert_kind_of(Exception, response.error)
+      assert_kind_of(HTTP::Response::Status, response.status_code)
+
+      response = @honey.responses.pop
+      assert_equal(2, response.metadata)
+      assert_kind_of(HTTP::Response::Status, response.status_code)
     end
   end
 
