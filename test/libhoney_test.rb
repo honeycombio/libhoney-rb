@@ -445,6 +445,8 @@ class LibhoneyResponseBlaster < Minitest::Test
     end
     @honey.close
     t.join
+
+    assert_equal @times_to_test, events
   end
 
   ##
