@@ -87,10 +87,7 @@ module Libhoney
 
               Response.new(error: e).tap do |error_response|
                 error_response.metadata = event.metadata
-                begin
-                  @responses.enq(error_response, !@block_on_responses)
-                rescue ThreadError
-                end
+                enqueue_response(error_response)
               end
             end
           rescue ThreadError
@@ -123,7 +120,7 @@ module Libhoney
       @threads.each(&:join)
       @threads = []
 
-      @responses.enq(nil)
+      enqueue_response(nil)
 
       0
     end
@@ -153,6 +150,18 @@ module Libhoney
 
     private
 
+    ##
+    # Enqueues a response only if there is something waiting on the queue.
+    #
+    def enqueue_response(response)
+      return unless @responses.num_waiting > 0
+
+      begin
+        @responses.enq(response, !@block_on_responses)
+      rescue ThreadError
+      end
+    end
+
     def process_response(http_response, before, batch)
       index = 0
       http_response.parse.each do |event|
@@ -162,10 +171,7 @@ module Libhoney
         Response.new(status_code: event['status']).tap do |response|
           response.duration = Time.now - before
           response.metadata = batched_event.metadata
-          begin
-            @responses.enq(response, !@block_on_responses)
-          rescue ThreadError
-          end
+          enqueue_response(response)
         end
       end
     end
@@ -185,10 +191,7 @@ module Libhoney
         rescue StandardError => e
           Response.new(error: e).tap do |response|
             response.metadata = event.metadata
-            begin
-              @responses.enq(response, !@block_on_responses)
-            rescue ThreadError
-            end
+            enqueue_response(response)
           end
 
           nil
