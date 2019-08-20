@@ -427,7 +427,8 @@ class LibhoneyResponseBlaster < Minitest::Test
       pending_work_capacity: 1,
       max_batch_size: 1,
       max_concurrent_batches: 1,
-      send_frequency: 1)
+      send_frequency: 1
+    )
   end
 
   ##
@@ -437,27 +438,19 @@ class LibhoneyResponseBlaster < Minitest::Test
   #
   def test_response_queue_overload_subscriber
     events = 0
-    honey = Libhoney::Client.new(
-      writekey: 'mywritekey',
-      dataset: 'mydataset',
-      pending_work_capacity: 1,
-      max_batch_size: 1,
-      max_concurrent_batches: 1,
-      send_frequency: 1)
 
     t = Thread.new do
-      events += 1 while honey.responses.pop
+      events += 1 while @honey.responses.pop
     end
 
-
     (1..@times_to_test).each do |i|
-      event = honey.event
+      event = @honey.event
       event.dataset = 'mydataset-send'
       event.add('test' => i)
       sleep 1
       event.send
     end
-    honey.close
+    @honey.close
     t.join
   end
 
