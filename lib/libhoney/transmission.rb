@@ -155,10 +155,8 @@ module Libhoney
     # there is no space left on the queue and we are not blocking on response
     #
     def enqueue_response(response)
-      begin
-        @responses.enq(response, !@block_on_responses)
-      rescue ThreadError
-      end
+      @responses.enq(response, !@block_on_responses)
+    rescue ThreadError
     end
 
     def process_response(http_response, before, batch)
