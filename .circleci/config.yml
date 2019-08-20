@@ -20,6 +20,8 @@ test_steps: &test_steps
       command: bundle exec rake rubocop
   - run:
       name: run tests
+      environment:
+        TESTOPS: --verbose
       command: bundle exec rake test
 
 
@@ -40,7 +42,7 @@ jobs:
     docker:
       - image: circleci/ruby:2.6
     steps: *test_steps
-  publish: 
+  publish:
     docker:
       # Just randomly pick one recent ruby version
       - image: circleci/ruby:2.6
