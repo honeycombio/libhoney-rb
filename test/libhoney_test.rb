@@ -362,12 +362,19 @@ class LibhoneyTest < Minitest::Test
 
     JSON.stub :generate, json_generate do
       t = Thread.new do
-        response = @honey.responses.pop
+        responses = []
+        while (response = @honey.responses.pop)
+          responses << response
+        end
+
+        assert_equal(2, responses.size)
+
+        response = responses[0]
         assert_equal(1, response.metadata)
         assert_kind_of(Exception, response.error)
         assert_kind_of(HTTP::Response::Status, response.status_code)
 
-        response = @honey.responses.pop
+        response = responses[1]
         assert_equal(2, response.metadata)
         assert_kind_of(HTTP::Response::Status, response.status_code)
       end
@@ -384,6 +391,7 @@ class LibhoneyTest < Minitest::Test
         event.send
       end
 
+      @honey.close
       t.join
     end
   end

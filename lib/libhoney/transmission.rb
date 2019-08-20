@@ -151,11 +151,10 @@ module Libhoney
     private
 
     ##
-    # Enqueues a response only if there is something waiting on the queue.
+    # Enqueues a response to the responses queue suppressing ThreadError when
+    # there is no space left on the queue and we are not blocking on response
     #
     def enqueue_response(response)
-      return unless @responses.num_waiting > 0
-
       begin
         @responses.enq(response, !@block_on_responses)
       rescue ThreadError
