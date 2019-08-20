@@ -255,17 +255,25 @@ class LibhoneyTest < Minitest::Test
 
     event = builder.event
     event.metadata = 42
-    event.send
 
-    resp = @honey.responses.pop
-    assert_equal 42, resp.metadata
+    t = Thread.new do
+      resp = @honey.responses.pop
+      assert_equal 42, resp.metadata
+    end
+
+    event.send
+    t.join
 
     event = builder.event
     event.metadata = 'string'
-    event.send
 
-    resp = @honey.responses.pop
-    assert_equal 'string', resp.metadata
+    t = Thread.new do
+      resp = @honey.responses.pop
+      assert_equal 'string', resp.metadata
+    end
+
+    event.send
+    t.join
   end
 
   def check_and_drop(expected)
@@ -353,25 +361,30 @@ class LibhoneyTest < Minitest::Test
     end
 
     JSON.stub :generate, json_generate do
+      t = Thread.new do
+        response = @honey.responses.pop
+        assert_equal(1, response.metadata)
+        assert_kind_of(Exception, response.error)
+        assert_kind_of(HTTP::Response::Status, response.status_code)
+
+        response = @honey.responses.pop
+        assert_equal(2, response.metadata)
+        assert_kind_of(HTTP::Response::Status, response.status_code)
+      end
+
       @honey.event.tap do |event|
         event.add_field(:error, true)
         event.metadata = 1
         event.send
       end
+
       @honey.event.tap do |event|
         event.add_field(:error, false)
         event.metadata = 2
         event.send
       end
 
-      response = @honey.responses.pop
-      assert_equal(1, response.metadata)
-      assert_kind_of(Exception, response.error)
-      assert_kind_of(HTTP::Response::Status, response.status_code)
-
-      response = @honey.responses.pop
-      assert_equal(2, response.metadata)
-      assert_kind_of(HTTP::Response::Status, response.status_code)
+      t.join
     end
   end
 
