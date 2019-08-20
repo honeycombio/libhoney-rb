@@ -20,7 +20,7 @@ test_steps: &test_steps
       command: bundle exec rake rubocop
   - run:
       name: run tests
-      command: TESTOPS="--verbose" bundle exec rake test
+      command: bundle exec rake test
 
 
 jobs:
