@@ -203,6 +203,10 @@ class LibhoneyTest < Minitest::Test
       events += 1 while @honey.responses.pop
     end
 
+    # ensure that the thread above is waiting for
+    # an event to be pushed onto the queue
+    sleep 0.1 while t.status!='sleep'
+
     (1..times_to_test).each do |i|
       event = @honey.event
       event.dataset = 'mydataset-send'
@@ -435,6 +439,10 @@ class LibhoneyResponseBlaster < Minitest::Test
     t = Thread.new do
       events += 1 while @honey.responses.pop
     end
+
+    # ensure that the thread above is waiting for
+    # an event to be pushed onto the queue
+    sleep 0.1 while t.status!='sleep'
 
     (1..@times_to_test).each do |i|
       event = @honey.event
