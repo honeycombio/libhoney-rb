@@ -40,7 +40,7 @@ jobs:
     docker:
       - image: circleci/ruby:2.6
     steps: *test_steps
-  publish: 
+  publish:
     docker:
       # Just randomly pick one recent ruby version
       - image: circleci/ruby:2.6

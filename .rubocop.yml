@@ -22,9 +22,14 @@ Metrics/MethodLength:
   Max: 25
   Exclude:
     - lib/libhoney/transmission.rb
+    - test/*
 
 Metrics/LineLength:
   Max: 115
   Exclude:
     - lib/libhoney/client.rb
     - lib/libhoney/builder.rb
+
+Metrics/AbcSize:
+  Exclude:
+    - test/*

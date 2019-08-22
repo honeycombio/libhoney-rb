@@ -203,6 +203,10 @@ class LibhoneyTest < Minitest::Test
       events += 1 while @honey.responses.pop
     end
 
+    # ensure that the thread above is waiting for
+    # an event to be pushed onto the queue
+    sleep 0.1 while t.status != 'sleep'
+
     (1..times_to_test).each do |i|
       event = @honey.event
       event.dataset = 'mydataset-send'
@@ -408,5 +412,67 @@ class LibhoneyUserAgentTest < Minitest::Test
     assert_requested :post,
                      'https://api.honeycomb.io/1/batch/somedataset',
                      headers: { 'User-Agent': %r{libhoney-rb/.* test/4.2} }
+  end
+end
+
+class LibhoneyResponseBlaster < Minitest::Test
+  def setup
+    @times_to_test = 2
+    @honey = Libhoney::Client.new(
+      writekey: 'mywritekey',
+      dataset: 'mydataset',
+      pending_work_capacity: 1,
+      max_batch_size: 1,
+      max_concurrent_batches: 1,
+      send_frequency: 1
+    )
+  end
+
+  ##
+  # In this scenario we are testing inputs that would cause the response queue
+  # to become full, but we are also subscribing to the responses and we test
+  # that we get the correct number back
+  #
+  def test_response_queue_overload_subscriber
+    events = 0
+
+    t = Thread.new do
+      events += 1 while @honey.responses.pop
+    end
+
+    # ensure that the thread above is waiting for
+    # an event to be pushed onto the queue
+    sleep 0.1 while t.status != 'sleep'
+
+    (1..@times_to_test).each do |i|
+      event = @honey.event
+      event.dataset = 'mydataset-send'
+      event.add('test' => i)
+      sleep 1
+      event.send
+    end
+    @honey.close
+    t.join
+
+    assert_equal @times_to_test, events
+  end
+
+  ##
+  # In this scenario we are testing inputs that would cause the response queue
+  # to become full. Ensure that we can call close without issue
+  #
+  def test_response_queue_overload
+    (1..@times_to_test).each do |i|
+      event = @honey.event
+      event.dataset = 'mydataset-send'
+      event.add('test' => i)
+      sleep 1
+      event.send
+    end
+
+    @honey.close
+
+    # we did it!
+    assert true
   end
 end
