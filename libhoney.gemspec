@@ -32,6 +32,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'webmock', '~> 3.4'
   spec.add_development_dependency 'yard'
   spec.add_development_dependency 'yardstick', '~> 0.9'
-  spec.add_dependency 'addressable', '~> 2.0'
+  spec.add_dependency 'addressable', '< 2.7'
   spec.add_dependency 'http', '>= 2.0', '< 5.0'
 end
