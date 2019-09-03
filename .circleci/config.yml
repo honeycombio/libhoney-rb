@@ -29,6 +29,10 @@ tag_filters: &tag_filters
         only: /.*/
 
 jobs:
+  ruby-2.2:
+    docker:
+      - image: circleci/ruby:2.2
+    steps: *test_steps
   ruby-2.3:
     docker:
       - image: circleci/ruby:2.3
@@ -65,12 +69,14 @@ workflows:
   version: 2
   build:
     jobs:
+      - ruby-2.2: *tag_filters
       - ruby-2.3: *tag_filters
       - ruby-2.4: *tag_filters
       - ruby-2.5: *tag_filters
       - ruby-2.6: *tag_filters
       - publish:
           requires:
+            - ruby-2.2
             - ruby-2.3
             - ruby-2.4
             - ruby-2.5
