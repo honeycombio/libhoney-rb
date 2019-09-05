@@ -50,7 +50,8 @@ class LibhoneyDefaultTest < Minitest::Test
                                  api_host: 'http://example.com', block_on_send: true,
                                  block_on_responses: true, max_batch_size: 100,
                                  send_frequency: 150, max_concurrent_batches: 100,
-                                 pending_work_capacity: 1500)
+                                 pending_work_capacity: 1500,
+                                 proxy_config: ['proxy-hostname.local', 8080, 'username', 'password'])
 
     assert_equal 'writekey', honey.writekey
     assert_equal 'dataset', honey.dataset

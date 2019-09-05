@@ -13,7 +13,8 @@ module Libhoney
                    responses: nil,
                    block_on_send: false,
                    block_on_responses: false,
-                   user_agent_addition: nil)
+                   user_agent_addition: nil,
+                   proxy_config: nil)
 
       @responses              = responses || SizedQueue.new(pending_work_capacity * 2)
       @block_on_send          = block_on_send
@@ -25,6 +26,7 @@ module Libhoney
       @pending_work_capacity  = pending_work_capacity
       @send_timeout           = send_timeout
       @user_agent             = build_user_agent(user_agent_addition).freeze
+      @proxy_config           = proxy_config
 
       @send_queue   = Queue.new
       @threads      = []
@@ -227,12 +229,15 @@ module Libhoney
 
     def build_http_clients
       Hash.new do |h, api_host|
-        h[api_host] = HTTP.timeout(connect: @send_timeout, write: @send_timeout, read: @send_timeout)
-                          .persistent(api_host)
-                          .headers(
-                            'User-Agent' => @user_agent,
-                            'Content-Type' => 'application/json'
-                          )
+        client = HTTP.timeout(connect: @send_timeout, write: @send_timeout, read: @send_timeout)
+                     .persistent(api_host)
+                     .headers(
+                       'User-Agent' => @user_agent,
+                       'Content-Type' => 'application/json'
+                     )
+
+        client = client.via(*@proxy_config) unless @proxy_config.nil?
+        h[api_host] = client
       end
     end
   end
