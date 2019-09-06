@@ -70,6 +70,7 @@ module Libhoney
     # @param block_on_responses [Boolean] if true, block if there is no thread reading from the response queue
     # @param pending_work_capacity [Fixnum] defaults to 1000. If the queue of
     #   pending events exceeds 1000, this client will start dropping events.
+    # rubocop:disable Metrics/ParameterLists
     def initialize(writekey: nil,
                    dataset: nil,
                    sample_rate: 1,
@@ -81,7 +82,9 @@ module Libhoney
                    max_batch_size: 50,
                    send_frequency: 100,
                    max_concurrent_batches: 10,
-                   pending_work_capacity: 1000)
+                   pending_work_capacity: 1000,
+                   proxy_config: nil)
+      # rubocop:enable Metrics/ParameterLists
       # check for insanity
       raise Exception, 'libhoney:  max_concurrent_batches must be greater than 0' if max_concurrent_batches < 1
       raise Exception, 'libhoney:  sample rate must be greater than 0'            if sample_rate < 1
@@ -118,6 +121,7 @@ module Libhoney
       @pending_work_capacity  = pending_work_capacity
       @responses              = SizedQueue.new(2 * @pending_work_capacity)
       @lock                   = Mutex.new
+      @proxy_config           = proxy_config
     end
 
     builder_attr_accessor :writekey, :dataset, :sample_rate, :api_host
@@ -221,7 +225,8 @@ module Libhoney
           responses: @responses,
           block_on_send: @block_on_send,
           block_on_responses: @block_on_responses,
-          user_agent_addition: @user_agent_addition
+          user_agent_addition: @user_agent_addition,
+          proxy_config: @proxy_config
         }
 
         @transmission ||= TransmissionClient.new(transmission_client_params)
