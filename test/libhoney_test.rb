@@ -6,6 +6,7 @@ require 'libhoney'
 require 'webmock/minitest'
 require 'sinatra/base'
 require 'sinatra/json'
+require 'spy'
 
 class HoneycombServer < Sinatra::Base
   set :json_encoder, :to_json
@@ -63,6 +64,22 @@ class LibhoneyDefaultTest < Minitest::Test
     assert_equal 150, honey.send_frequency
     assert_equal 100, honey.max_concurrent_batches
     assert_equal 1500, honey.pending_work_capacity
+  end
+
+  def test_send_now_with_proxy
+    via = Spy.on_instance_method(HTTP::Client, :via)
+
+    honey = Libhoney::Client.new(writekey: 'writekey',
+                                 dataset: 'dataset',
+                                 sample_rate: 1,
+                                 api_host: 'http://example.com',
+                                 proxy_config: ['myproxy.example.com', 8080])
+    builder = honey.builder
+    builder.send_now('argle' => 'bargle')
+
+    honey.close
+
+    assert via.has_been_called?
   end
 end
 
