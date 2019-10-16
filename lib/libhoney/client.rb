@@ -216,7 +216,7 @@ module Libhoney
     # @param event [Event] the event to send to honeycomb
     # @api private
     def send_event(event)
-      @lock.synchronize do
+      @transmission ||= @lock.synchronize do
         transmission_client_params = {
           max_batch_size: @max_batch_size,
           send_frequency: @send_frequency,
@@ -229,7 +229,7 @@ module Libhoney
           proxy_config: @proxy_config
         }
 
-        @transmission ||= TransmissionClient.new(transmission_client_params)
+        TransmissionClient.new(transmission_client_params)
       end
 
       @transmission.add(event)
