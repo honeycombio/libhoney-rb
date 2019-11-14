@@ -4,11 +4,19 @@ module Libhoney
     RECURSION = '[RECURSION]'.freeze
     RAISED = '[RAISED]'.freeze
 
+    # Cleans an object for converting to JSON. Checks for recursion,
+    # exceptions generated, and non UTF8 encoded strings.
+    # @param data the data to clean
+    # @param seen [Hash] used to check for recursion
+    # @return the cleaned object
     def clean_data(data, seen = {})
       return nil if data.nil?
 
+      # check for recursion here, by tracking all of the potentially nested
+      # objects that we have seen before.
       protection =  case data
                     when Hash, Array, Set
+                      # bail here if we have already seen this object
                       return seen[data] if seen[data]
 
                       seen[data] = RECURSION
@@ -42,6 +50,9 @@ module Libhoney
       value
     end
 
+    # Converts a string to UTF8 encoding if required using the ENCODING_OPTIONS
+    # @param str [String] the string to convert
+    # @return [String] the UTF8 encoded string
     def clean_string(str)
       return str if str.encoding == Encoding::UTF_8 && str.valid_encoding?
 
