@@ -1,10 +1,13 @@
 require 'json'
 require 'timeout'
 require 'libhoney/response'
+require 'libhoney/cleaner'
 
 module Libhoney
   # @api private
   class TransmissionClient
+    include Cleaner
+
     def initialize(max_batch_size: 50,
                    send_frequency: 100,
                    max_concurrent_batches: 10,
@@ -63,6 +66,7 @@ module Libhoney
         begin
           http = http_clients[api_host]
           body = serialize_batch(batch)
+
           next if body.nil?
 
           headers = {
@@ -179,11 +183,14 @@ module Libhoney
       payload = []
       batch.map! do |event|
         begin
+          data = clean_data(event.data)
+
           e = {
             time: event.timestamp.iso8601(3),
             samplerate: event.sample_rate,
-            data: event.data
+            data: data
           }
+
           payload << JSON.generate(e)
 
           event
