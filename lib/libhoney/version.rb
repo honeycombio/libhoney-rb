@@ -1,3 +1,3 @@
 module Libhoney
-  VERSION = '1.13.6'.freeze
+  VERSION = '1.14.1'.freeze
 end
