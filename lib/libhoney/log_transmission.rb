@@ -1,4 +1,5 @@
 require 'json'
+require 'libhoney/cleaner'
 
 module Libhoney
   # For debugging use: a mock version of TransmissionClient that simply prints
@@ -9,6 +10,8 @@ module Libhoney
   #       to verify what events your instrumented code is sending. Use in
   #       production is not recommended.
   class LogTransmissionClient
+    include Cleaner
+
     def initialize(output:, verbose: false)
       @output  = output
       @verbose = verbose
@@ -21,7 +24,9 @@ module Libhoney
         metadata << " (sample rate: #{event.sample_rate})" if event.sample_rate != 1
         @output.print("#{metadata} | ")
       end
-      @output.puts(event.data.to_json)
+      clean_data(event.data).tap do |data|
+        @output.puts(data.to_json)
+      end
     end
 
     # Flushes the output (but does not close it)
