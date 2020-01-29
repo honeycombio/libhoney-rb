@@ -56,7 +56,7 @@ module Libhoney
     def clean_string(str)
       return str if str.encoding == Encoding::UTF_8 && str.valid_encoding?
 
-      str.encode(Encoding::UTF_8, ENCODING_OPTIONS)
+      str.encode(Encoding::UTF_8, **ENCODING_OPTIONS)
     end
   end
 end
