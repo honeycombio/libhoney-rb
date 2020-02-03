@@ -121,8 +121,6 @@ module Libhoney
     #
     # @return [self] this event.
     def send_presampled
-      raise ArgumentError, "No metrics added to event. Won't send empty event." if data.empty?
-
       @libhoney.send_event(self)
       self
     end
