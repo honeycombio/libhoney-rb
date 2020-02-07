@@ -2,6 +2,13 @@ version: 2.0
 
 test_steps: &test_steps
   - checkout
+  - run:
+      name: Force Bundler Version
+      command: |
+        sudo gem update --system
+        echo 'export BUNDLER_VERSION=$(cat Gemfile.lock | tail -1 | tr -d " ")' >> $BASH_ENV
+        source $BASH_ENV
+        gem install bundler
   - restore_cache:
       keys:
         - v1-dependencies-{{ checksum "Gemfile.lock" }}
@@ -45,10 +52,14 @@ jobs:
     docker:
       - image: circleci/ruby:2.6
     steps: *test_steps
+  ruby-2.7:
+    docker:
+      - image: circleci/ruby:2.7
+    steps: *test_steps
   publish:
     docker:
       # Just randomly pick one recent ruby version
-      - image: circleci/ruby:2.6
+      - image: circleci/ruby:2.7
     working_directory: ~/repo
     steps:
       - checkout
@@ -69,12 +80,14 @@ workflows:
       - ruby-2.4: *tag_filters
       - ruby-2.5: *tag_filters
       - ruby-2.6: *tag_filters
+      - ruby-2.7: *tag_filters
       - publish:
           requires:
             - ruby-2.3
             - ruby-2.4
             - ruby-2.5
             - ruby-2.6
+            - ruby-2.7
           filters:
             tags:
               only: /^v.*/
