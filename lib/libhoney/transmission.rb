@@ -9,7 +9,7 @@ module Libhoney
     include Cleaner
 
     def initialize(max_batch_size: 50,
-                   send_frequency: 100,
+                   send_frequency: 500,
                    max_concurrent_batches: 10,
                    pending_work_capacity: 1000,
                    send_timeout: 10,

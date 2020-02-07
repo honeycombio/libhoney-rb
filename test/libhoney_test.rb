@@ -41,7 +41,7 @@ class LibhoneyDefaultTest < Minitest::Test
     assert_equal false, honey.block_on_send
     assert_equal false, honey.block_on_responses
     assert_equal 50, honey.max_batch_size
-    assert_equal 100, honey.send_frequency
+    assert_equal 500, honey.send_frequency
     assert_equal 10, honey.max_concurrent_batches
     assert_equal 1000, honey.pending_work_capacity
   end
