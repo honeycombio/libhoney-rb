@@ -74,6 +74,20 @@ jobs:
 
 workflows:
   version: 2
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - ruby-2.3: *tag_filters
+      - ruby-2.4: *tag_filters
+      - ruby-2.5: *tag_filters
+      - ruby-2.6: *tag_filters
+      - ruby-2.7: *tag_filters
   build:
     jobs:
       - ruby-2.3: *tag_filters
