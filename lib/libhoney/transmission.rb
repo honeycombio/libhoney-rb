@@ -138,6 +138,7 @@ module Libhoney
           while (event = Timeout.timeout(@send_frequency) { @batch_queue.pop })
             key = [event.api_host, event.writekey, event.dataset]
             batched_events[key] << event
+            break if Time.now > next_send_time
           end
 
           break
