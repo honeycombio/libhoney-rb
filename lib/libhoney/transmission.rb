@@ -135,9 +135,11 @@ module Libhoney
 
       loop do
         begin
-          while (event = Timeout.timeout(@send_frequency) { @batch_queue.pop })
-            key = [event.api_host, event.writekey, event.dataset]
-            batched_events[key] << event
+          Thread.handle_interrupt(Timeout::Error => :immediate) do
+            while (event = Timeout.timeout(@send_frequency) { @batch_queue.pop })
+              key = [event.api_host, event.writekey, event.dataset]
+              batched_events[key] << event
+            end
           end
 
           break
