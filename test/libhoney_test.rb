@@ -251,6 +251,24 @@ class LibhoneyTest < Minitest::Test
     assert_requested :post, 'https://api.honeycomb.io/1/batch/mydataset', times: 1
   end
 
+  def test_handle_interrupt
+    stub_request(:post, 'https://api.honeycomb.io/1/batch/interrupt')
+      .to_rack(HoneycombServer)
+
+    Thread.handle_interrupt(Timeout::Error => :never) do
+      (1..10).each do |i|
+        event = @honey.event
+        event.dataset = 'interrupt'
+        event.add('test' => i)
+        event.send
+      end
+    end
+
+    sleep 1
+
+    assert_requested :post, 'https://api.honeycomb.io/1/batch/interrupt', times: 1
+  end
+
   def test_close
     times_to_test = 900
 
