@@ -159,7 +159,7 @@ end
 class LibhoneyEventTest < Minitest::Test
   def setup
     params = { writekey: 'Xwritekey', dataset: 'Xdataset', api_host: 'Xurl' }
-    @event = Libhoney::Client.new(params).event
+    @event = Libhoney::Client.new(**params).event
   end
 
   def test_overrides
@@ -442,7 +442,7 @@ class LibhoneyUserAgentTest < Minitest::Test
 
   def test_user_agent_addition
     params = { writekey: 'mywritekey', dataset: 'somedataset', user_agent_addition: 'test/4.2' }
-    honey = Libhoney::Client.new(params)
+    honey = Libhoney::Client.new(**params)
     honey.send_now('ORLY' => 'YA RLY')
     honey.close
 
