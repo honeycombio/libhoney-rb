@@ -22,7 +22,7 @@ matrix_rubyversions: &matrix_rubyversions
       rubyversion: ["2.3", "2.4", "2.5", "2.6", "2.7"]
 
 # Default version of ruby to use for lint and publishing
-default_rubyversion: &default_rubyversion "12"
+default_rubyversion: &default_rubyversion "2.7"
 
 executors:
   ruby:
