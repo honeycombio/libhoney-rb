@@ -1,66 +1,116 @@
-version: 2.0
+version: 2.1
 
-test_steps: &test_steps
-  - checkout
-  - run:
-      name: Force Bundler Version
-      command: |
-        sudo gem update --system
-        echo 'export BUNDLER_VERSION=$(cat Gemfile.lock | tail -1 | tr -d " ")' >> $BASH_ENV
-        source $BASH_ENV
-        gem install bundler
-  - restore_cache:
-      keys:
-        - v1-dependencies-{{ checksum "Gemfile.lock" }}
-        # fallback to using the latest cache if no exact match is found
-        - v1-dependencies-
-  - run:
-      name: install dependencies
-      command: |
-        bundle install --jobs=4 --retry=3 --path vendor/bundle
-  - save_cache:
-      paths:
-        - ./vendor/bundle
-      key: v1-dependencies-{{ checksum "Gemfile.lock" }}
-  - run:
-      name: run rubocop
-      command: bundle exec rake rubocop
-  - run:
-      name: run tests
-      command: bundle exec rake test
+# YAML Anchors to reduce copypasta
 
-# required as all of the jobs need to have a tag filter for some reason
-tag_filters: &tag_filters
+# This is necessary for job to run when a tag is created
+filters_always: &filters_always
   filters:
-      tags:
-        only: /.*/
+    tags:
+      only: /.*/
+
+# Restrict running to only be on tags starting with vNNNN
+filters_publish: &filters_publish
+  filters:
+    tags:
+      only: /^v[0-9].*/
+    branches:
+      ignore: /.*/
+
+matrix_rubyversions: &matrix_rubyversions
+  matrix:
+    parameters:
+      rubyversion: ["2.3", "2.4", "2.5", "2.6", "2.7"]
+
+# Default version of ruby to use for lint and publishing
+default_rubyversion: &default_rubyversion "12"
+
+executors:
+  ruby:
+    parameters:
+      rubyversion:
+        type: string
+        default: *default_rubyversion
+    docker:
+      - image: circleci/ruby:<< parameters.rubyversion >>
+  github:
+    docker:
+      - image: cibuilds/github:0.13.0
+
+commands:
+  publish_github:
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: "Artifacts being published"
+          command: |
+            echo "about to publish to tag ${CIRCLE_TAG}"
+            ls -l ~/artifacts/*
+      - run:
+          name: "GHR Draft"
+          command: ghr -draft -n ${CIRCLE_TAG} -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ~/artifacts
 
 jobs:
-  ruby-2.3:
-    docker:
-      - image: circleci/ruby:2.3
-    steps: *test_steps
-  ruby-2.4:
-    docker:
-      - image: circleci/ruby:2.4
-    steps: *test_steps
-  ruby-2.5:
-    docker:
-      - image: circleci/ruby:2.5
-    steps: *test_steps
-  ruby-2.6:
-    docker:
-      - image: circleci/ruby:2.6
-    steps: *test_steps
-  ruby-2.7:
-    docker:
-      - image: circleci/ruby:2.7
-    steps: *test_steps
-  publish:
-    docker:
-      # Just randomly pick one recent ruby version
-      - image: circleci/ruby:2.7
-    working_directory: ~/repo
+  test:
+    parameters:
+      rubyversion:
+        type: string
+        default: *default_rubyversion
+    executor:
+      name: ruby
+      rubyversion: "<< parameters.rubyversion >>"
+    steps:
+      - checkout
+      - run:
+          name: Force Bundler Version
+          command: |
+            sudo gem update --system
+            echo 'export BUNDLER_VERSION=$(cat Gemfile.lock | tail -1 | tr -d " ")' >> $BASH_ENV
+            source $BASH_ENV
+            gem install bundler
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "Gemfile.lock" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+      - run:
+          name: install dependencies
+          command: |
+            bundle install --jobs=4 --retry=3 --path vendor/bundle
+      - save_cache:
+          paths:
+            - ./vendor/bundle
+          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+      - run:
+          name: run rubocop
+          command: bundle exec rake rubocop
+      - run:
+          name: run tests
+          command: bundle exec rake test
+
+  build_artifacts:
+    executor:
+      name: ruby
+    steps:
+      - checkout
+      - run: mkdir -p ~/artifacts
+      - run: gem build libhoney.gemspec
+      - run: cp libhoney-*.gem ~/artifacts/
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - artifacts
+      - store_artifacts:
+          path: ~/artifacts
+
+  publish_github:
+    executor: github
+    steps:
+      - publish_github
+
+  publish_rubygems:
+    executor:
+      name: ruby
     steps:
       - checkout
       - run:
@@ -73,7 +123,6 @@ jobs:
             gem push "libhoney-$(git describe --tags | cut -d "v" -f 2).gem"
 
 workflows:
-  version: 2
   nightly:
     triggers:
       - schedule:
@@ -83,27 +132,24 @@ workflows:
               only:
                 - main
     jobs:
-      - ruby-2.3: *tag_filters
-      - ruby-2.4: *tag_filters
-      - ruby-2.5: *tag_filters
-      - ruby-2.6: *tag_filters
-      - ruby-2.7: *tag_filters
+      - test:
+          <<: *matrix_rubyversions
   build:
     jobs:
-      - ruby-2.3: *tag_filters
-      - ruby-2.4: *tag_filters
-      - ruby-2.5: *tag_filters
-      - ruby-2.6: *tag_filters
-      - ruby-2.7: *tag_filters
-      - publish:
+      - test:
+          <<: *filters_always
+          <<: *matrix_rubyversions
+      - build_artifacts:
+          <<: *filters_always
           requires:
-            - ruby-2.3
-            - ruby-2.4
-            - ruby-2.5
-            - ruby-2.6
-            - ruby-2.7
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+            - test
+      - publish_github:
+          <<: *filters_publish
+          context: Honeycomb Secrets
+          requires:
+            - build_artifacts
+      - publish_rubygems:
+          <<: *filters_publish
+          context: Honeycomb Secrets
+          requires:
+            - test
