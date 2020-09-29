@@ -229,7 +229,7 @@ module Libhoney
           proxy_config: @proxy_config
         }
 
-        @transmission ||= TransmissionClient.new(transmission_client_params)
+        @transmission ||= TransmissionClient.new(**transmission_client_params)
       end
 
       @transmission.add(event)
