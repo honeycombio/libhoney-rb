@@ -17,8 +17,8 @@ class TransmissionClientTest < Minitest::Test
     # check event added to repsonse queue
     assert_equal(1, response_queue.length)
     e = response_queue.pop
-    assert(!e.nil?)
-    assert(!e.error.nil?)
+    refute_nil(e)
+    refute_nil(e.error)
     assert_equal('Libhoney::TransmissionClient: nil or empty required fields (api host, write key, dataset).'\
       ' Will not attemot to send.', e.error.message)
   end
