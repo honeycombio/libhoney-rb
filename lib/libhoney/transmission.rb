@@ -59,7 +59,7 @@ module Libhoney
 
       unless invalid.empty?
         e = StandardError.new("#{self.class.name}: nil or empty required fields (#{invalid.join(', ')})"\
-          ". Will not attemot to send.")
+          '. Will not attemot to send.')
         Response.new(error: e).tap do |error_response|
           error_response.metadata = event.metadata
           enqueue_response(error_response)
