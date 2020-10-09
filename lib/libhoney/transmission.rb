@@ -40,7 +40,7 @@ module Libhoney
     end
 
     def add(event)
-      return if !event_valid(event)
+      return unless event_valid(event)
 
       begin
         @batch_queue.enq(event, !@block_on_send)
@@ -57,8 +57,9 @@ module Libhoney
       invalid.push('write key') if event.writekey.nil? || event.writekey.empty?
       invalid.push('dataset') if event.dataset.nil? || event.dataset.empty?
 
-      if !invalid.empty?
-        e = StandardError.new("#{self.class.name}: nil or empty required fields (#{invalid.join(', ')}). Will not attemot to send.")
+      unless invalid.empty?
+        e = StandardError.new("#{self.class.name}: nil or empty required fields (#{invalid.join(', ')})"\
+          ". Will not attemot to send.")
         Response.new(error: e).tap do |error_response|
           error_response.metadata = event.metadata
           enqueue_response(error_response)
@@ -67,7 +68,7 @@ module Libhoney
         return false
       end
 
-      return true
+      true
     end
 
     def send_loop
