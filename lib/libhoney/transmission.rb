@@ -40,6 +40,8 @@ module Libhoney
     end
 
     def add(event)
+      return if !event_valid(event)
+
       begin
         @batch_queue.enq(event, !@block_on_send)
       rescue ThreadError
@@ -47,6 +49,25 @@ module Libhoney
       end
 
       ensure_threads_running
+    end
+
+    def event_valid(event)
+      invalid = []
+      invalid.push('api host') if event.api_host.nil? || event.api_host.empty?
+      invalid.push('write key') if event.writekey.nil? || event.writekey.empty?
+      invalid.push('dataset') if event.dataset.nil? || event.dataset.empty?
+
+      if !invalid.empty?
+        e = StandardError.new("#{self.class.name}: nil or empty required fields (#{invalid.join(', ')}). Will not attemot to send.")
+        Response.new(error: e).tap do |error_response|
+          error_response.metadata = event.metadata
+          enqueue_response(error_response)
+        end
+
+        return false
+      end
+
+      return true
     end
 
     def send_loop
