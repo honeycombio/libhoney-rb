@@ -20,7 +20,8 @@ class TransmissionClientTest < Minitest::Test
     assert(!e.nil?)
     assert(!e.error.nil?)
     assert_equal('Libhoney::TransmissionClient: nil or empty required fields (api host, write key, dataset).'\
-      ' Will not attemot to send.', e.error.message)  end
+      ' Will not attemot to send.', e.error.message)
+  end
 
   def test_event_with_empty_required_fields_is_rejected
     mock_builder = Minitest::Mock.new
