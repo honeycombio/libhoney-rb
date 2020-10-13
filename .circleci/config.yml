@@ -61,16 +61,9 @@ jobs:
       rubyversion: "<< parameters.rubyversion >>"
     steps:
       - checkout
-      - run:
-          name: Force Bundler Version
-          command: |
-            sudo gem update --system
-            echo 'export BUNDLER_VERSION=$(cat Gemfile.lock | tail -1 | tr -d " ")' >> $BASH_ENV
-            source $BASH_ENV
-            gem install bundler
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "Gemfile.lock" }}
+            - v1-dependencies-{{ checksum "libhoney.gemspec" }}
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
       - run:
@@ -80,7 +73,7 @@ jobs:
       - save_cache:
           paths:
             - ./vendor/bundle
-          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+          key: v1-dependencies-{{ checksum "libhoney.gemspec" }}
       - run:
           name: run rubocop
           command: bundle exec rake rubocop
