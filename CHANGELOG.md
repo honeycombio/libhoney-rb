@@ -1,7 +1,5 @@
 # libhoney-rb changelog
 
-## 1.14.7
-
 ### Misc
 
 -   Added CHANGELOG.md
