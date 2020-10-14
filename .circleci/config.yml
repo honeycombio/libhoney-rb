@@ -49,6 +49,22 @@ commands:
       - run:
           name: "GHR Draft"
           command: ghr -draft -n ${CIRCLE_TAG} -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ~/artifacts
+  publish_rubygems:
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: "Artifacts being published"
+          command: |
+            echo "about to publish to tag ${CIRCLE_TAG}"
+            ls -l ~/artifacts/*
+      - run:
+          name: Setup Rubygems
+          command: bash .circleci/setup-rubygems.sh
+      - run:
+          name: Publish to Rubygems
+          command: |
+            gem push "~/artifacts/*.gem"
 
 jobs:
   test:
@@ -105,15 +121,7 @@ jobs:
     executor:
       name: ruby
     steps:
-      - checkout
-      - run:
-          name: Setup Rubygems
-          command: bash .circleci/setup-rubygems.sh
-      - run:
-          name: Publish to Rubygems
-          command: |
-            gem build libhoney.gemspec
-            gem push "libhoney-$(git describe --tags | cut -d "v" -f 2).gem"
+      - publish_rubygems
 
 workflows:
   nightly:
@@ -145,4 +153,4 @@ workflows:
           <<: *filters_publish
           context: Honeycomb Secrets
           requires:
-            - test
+            - build_artifacts

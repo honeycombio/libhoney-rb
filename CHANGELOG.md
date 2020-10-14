@@ -1,6 +1,6 @@
 # libhoney-rb changelog
 
-## 1.14.6
+## 1.14.8
 
 ### Misc
 
