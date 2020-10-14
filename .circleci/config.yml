@@ -65,7 +65,7 @@ commands:
       - run:
           name: Publish to Rubygems
           command: |
-            gem push "~/artifacts/*.gem"
+            gem push ~/artifacts/*.gem
 
 jobs:
   test:
