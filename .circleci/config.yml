@@ -58,6 +58,7 @@ commands:
           command: |
             echo "about to publish to tag ${CIRCLE_TAG}"
             ls -l ~/artifacts/*
+      - checkout
       - run:
           name: Setup Rubygems
           command: bash .circleci/setup-rubygems.sh
