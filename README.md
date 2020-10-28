@@ -4,8 +4,8 @@ Ruby gem for sending events to [Honeycomb](https://www.honeycomb.io), a service 
 
 Requires Ruby 2.2 or greater.
 
-- [Usage and Examples](https://docs.honeycomb.io/sdk/ruby/)
-- [API Reference](https://www.rubydoc.info/gems/libhoney)
+-   [Usage and Examples](https://docs.honeycomb.io/sdk/ruby/)
+-   [API Reference](https://www.rubydoc.info/gems/libhoney)
 
 For tracing support and automatic instrumentation of Rails, Sinatra, Rack, ActiveRecord, and other frameworks, check out our [Beeline for Ruby](https://github.com/honeycombio/beeline-ruby).
 
@@ -20,8 +20,11 @@ All contributions will be released under the Apache License 2.0.
 ### Releasing a new version
 
 CircleCI will automatically upload tagged releases to Rubygems. To release a new
-version, run
+version, update the version using `bump`.
+
 ```
-bump patch --tag   # Or bump minor --tag, etc.
-git push --follow-tags
+bump patch # Or bump minor, etc.
 ```
+
+Then, after the version change has been merged into `main`, follow our usual instructions
+for tagging and updating the github release.

@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rubocop', '< 0.69'
   spec.add_development_dependency 'sinatra'
   spec.add_development_dependency 'sinatra-contrib'
-  spec.add_development_dependency 'spy'
+  spec.add_development_dependency 'spy', '1.0.0'
   spec.add_development_dependency 'webmock', '~> 3.4'
   spec.add_development_dependency 'yard'
   spec.add_development_dependency 'yardstick', '~> 0.9'
