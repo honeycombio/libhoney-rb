@@ -4,28 +4,6 @@ require 'http'
 
 require 'libhoney/null_transmission'
 
-# Define a few additions that proxy access through Client's builder. Makes Client much tighter.
-class Class
-  def builder_attr_accessor(*args)
-    args.each do |arg|
-      class_eval("def #{arg};@builder.#{arg};end", __FILE__, __LINE__)
-      class_eval("def #{arg}=(val);@builder.#{arg}=val;end", __FILE__, __LINE__)
-    end
-  end
-
-  def builder_attr_reader(*args)
-    args.each do |arg|
-      class_eval("def #{arg};@builder.#{arg};end", __FILE__, __LINE__)
-    end
-  end
-
-  def builder_attr_writer(*args)
-    args.each do |arg|
-      class_eval("def #{arg}=(val);@builder.#{arg}=val;end", __FILE__, __LINE__)
-    end
-  end
-end
-
 module Libhoney
   ##
   # This is a library to allow you to send events to Honeycomb from within your
@@ -124,14 +102,44 @@ module Libhoney
       @proxy_config           = proxy_config
     end
 
-    builder_attr_accessor :writekey, :dataset, :sample_rate, :api_host
-
     attr_reader :block_on_send, :block_on_responses, :max_batch_size,
                 :send_frequency, :max_concurrent_batches,
                 :pending_work_capacity, :responses
 
     def event
       @builder.event
+    end
+
+    def writekey
+      @builder.writekey
+    end
+
+    def dataset
+      @builder.dataset
+    end
+
+    def sample_rate
+      @builder.sample_rate
+    end
+
+    def api_host
+      @builder.api_host
+    end
+
+    def writekey=(val)
+      @builder.writekey = val
+    end
+
+    def dataset=(val)
+      @builder.dataset = val
+    end
+
+    def sample_rate=(val)
+      @builder.sample_rate = val
+    end
+
+    def api_host=(val)
+      @builder.api_host = val
     end
 
     def builder(fields = {}, dyn_fields = {})
