@@ -1,6 +1,7 @@
 require 'time'
 require 'json'
 require 'http'
+require 'forwardable'
 
 require 'libhoney/null_transmission'
 
@@ -30,6 +31,8 @@ module Libhoney
   #   evt.send
   #
   class Client
+    extend Forwardable
+
     API_HOST = 'https://api.honeycomb.io/'.freeze
 
     # Instantiates libhoney and prepares it to send events to Honeycomb.
@@ -106,45 +109,8 @@ module Libhoney
                 :send_frequency, :max_concurrent_batches,
                 :pending_work_capacity, :responses
 
-    def event
-      @builder.event
-    end
-
-    def writekey
-      @builder.writekey
-    end
-
-    def dataset
-      @builder.dataset
-    end
-
-    def sample_rate
-      @builder.sample_rate
-    end
-
-    def api_host
-      @builder.api_host
-    end
-
-    def writekey=(val)
-      @builder.writekey = val
-    end
-
-    def dataset=(val)
-      @builder.dataset = val
-    end
-
-    def sample_rate=(val)
-      @builder.sample_rate = val
-    end
-
-    def api_host=(val)
-      @builder.api_host = val
-    end
-
-    def builder(fields = {}, dyn_fields = {})
-      @builder.builder(fields, dyn_fields)
-    end
+    def_delegators :@builder, :event, :writekey, :writekey=, :dataset, :dataset=,
+                   :sample_rate, :sample_rate=, :api_host, :api_host=, :builder
 
     # Nuke the queue and wait for inflight requests to complete before returning.
     # If you set drain=false, all queued requests will be dropped on the floor.
