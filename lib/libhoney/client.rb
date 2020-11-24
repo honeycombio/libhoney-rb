@@ -1,30 +1,9 @@
 require 'time'
 require 'json'
 require 'http'
+require 'forwardable'
 
 require 'libhoney/null_transmission'
-
-# Define a few additions that proxy access through Client's builder. Makes Client much tighter.
-class Class
-  def builder_attr_accessor(*args)
-    args.each do |arg|
-      class_eval("def #{arg};@builder.#{arg};end", __FILE__, __LINE__)
-      class_eval("def #{arg}=(val);@builder.#{arg}=val;end", __FILE__, __LINE__)
-    end
-  end
-
-  def builder_attr_reader(*args)
-    args.each do |arg|
-      class_eval("def #{arg};@builder.#{arg};end", __FILE__, __LINE__)
-    end
-  end
-
-  def builder_attr_writer(*args)
-    args.each do |arg|
-      class_eval("def #{arg}=(val);@builder.#{arg}=val;end", __FILE__, __LINE__)
-    end
-  end
-end
 
 module Libhoney
   ##
@@ -52,6 +31,8 @@ module Libhoney
   #   evt.send
   #
   class Client
+    extend Forwardable
+
     API_HOST = 'https://api.honeycomb.io/'.freeze
 
     # Instantiates libhoney and prepares it to send events to Honeycomb.
@@ -124,19 +105,12 @@ module Libhoney
       @proxy_config           = proxy_config
     end
 
-    builder_attr_accessor :writekey, :dataset, :sample_rate, :api_host
-
     attr_reader :block_on_send, :block_on_responses, :max_batch_size,
                 :send_frequency, :max_concurrent_batches,
                 :pending_work_capacity, :responses
 
-    def event
-      @builder.event
-    end
-
-    def builder(fields = {}, dyn_fields = {})
-      @builder.builder(fields, dyn_fields)
-    end
+    def_delegators :@builder, :event, :writekey, :writekey=, :dataset, :dataset=,
+                   :sample_rate, :sample_rate=, :api_host, :api_host=, :builder
 
     # Nuke the queue and wait for inflight requests to complete before returning.
     # If you set drain=false, all queued requests will be dropped on the floor.
