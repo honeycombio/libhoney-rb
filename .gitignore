@@ -52,3 +52,5 @@ build-iPhoneSimulator/
 # vim stuff
 *.swp
 *.swo
+
+Gemfile.lock
