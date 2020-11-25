@@ -6,6 +6,10 @@
 
 - Don't moneypatch Class (#70)
 
+### Maintenance:
+
+- Add lockfile to gitignore (#71)
+
 ## 1.15.0
 
 ### Improvements:
