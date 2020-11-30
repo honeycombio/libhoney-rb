@@ -136,7 +136,7 @@ module Libhoney
       end
 
       @batch_queue.enq(nil)
-      @batch_thread.join
+      @batch_thread.join unless @batch_thread.nil?
 
       # send @threads.length number of nils so each thread will fall out of send_loop
       @threads.length.times { @send_queue << nil }
