@@ -1,5 +1,3 @@
-require 'http'
-
 module Libhoney
   class Response
     attr_accessor :duration, :status_code, :metadata, :error
@@ -9,7 +7,7 @@ module Libhoney
                    metadata: nil,
                    error: nil)
       @duration    = duration
-      @status_code = HTTP::Response::Status.new(status_code)
+      @status_code = status_code
       @metadata    = metadata
       @error       = error
     end

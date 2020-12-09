@@ -1,6 +1,5 @@
 require 'time'
 require 'json'
-require 'http'
 require 'forwardable'
 
 require 'libhoney/null_transmission'

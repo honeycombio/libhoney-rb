@@ -93,7 +93,7 @@ module Libhoney
           }
 
           response = http.post(
-            "/1/batch/#{Addressable::URI.escape(dataset)}",
+            path: "/1/batch/#{Addressable::URI.escape(dataset)}",
             body: body,
             headers: headers
           )
@@ -187,7 +187,7 @@ module Libhoney
 
     def process_response(http_response, before, batch)
       index = 0
-      http_response.parse.each do |event|
+      JSON.parse(http_response.body).each do |event|
         index += 1 while batch[index].nil? && index < batch.size
         break unless (batched_event = batch[index])
 
@@ -256,14 +256,30 @@ module Libhoney
 
     def build_http_clients
       Hash.new do |h, api_host|
-        client = HTTP.timeout(connect: @send_timeout, write: @send_timeout, read: @send_timeout)
-                     .persistent(api_host)
-                     .headers(
-                       'User-Agent' => @user_agent,
-                       'Content-Type' => 'application/json'
-                     )
+        if @proxy_config
+          host, port, user, pass = @proxy_config
+          userinfo = "#{user}:#{pass}" if user
+          # TODO: http.rb doesn't include scheme, is this always HTTPS?
+          proxy = URI::HTTPS.build(
+            host: host,
+            port: port,
+            userinfo: userinfo,
+          ).to_s
+        end
 
-        client = client.via(*@proxy_config) unless @proxy_config.nil?
+        client = Excon.new(
+          api_host,
+          persistent: true,
+          read_timeout: @send_timeout,
+          write_timeout: @send_timeout,
+          connect_timeout: @send_timeout,
+          proxy: proxy,
+          headers: {
+            'User-Agent' => @user_agent,
+            'Content-Type' => 'application/json'
+          },
+        )
+
         h[api_host] = client
       end
     end

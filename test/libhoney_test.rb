@@ -65,21 +65,27 @@ class LibhoneyDefaultTest < Minitest::Test
     assert_equal 100, honey.max_concurrent_batches
     assert_equal 1500, honey.pending_work_capacity
   end
+end
 
+class LibhoneyProxyTest < Minitest::Test
   def test_send_now_with_proxy
-    via = Spy.on_instance_method(HTTP::Client, :via)
+    stub_request(:post, 'http://example.com/1/batch/dataset').
+      with(headers: { 'Proxy-Authorization' => /^Basic / }).
+      to_rack(HoneycombServer)
 
     honey = Libhoney::Client.new(writekey: 'writekey',
                                  dataset: 'dataset',
                                  sample_rate: 1,
                                  api_host: 'http://example.com',
-                                 proxy_config: ['myproxy.example.com', 8080])
+                                 proxy_config: ['proxy-hostname.local', 8080, 'username', 'password'])
     builder = honey.builder
     builder.send_now('argle' => 'bargle')
 
     honey.close
 
-    assert via.has_been_called?
+    response = honey.responses.pop
+    assert_nil(response.error)
+    assert_equal(202, response.status_code)
   end
 end
 
@@ -359,7 +365,7 @@ class LibhoneyTest < Minitest::Test
     while (response = @honey.responses.pop)
       error_count -= 1
       assert_kind_of(Exception, response.error)
-      assert_kind_of(HTTP::Response::Status, response.status_code)
+      assert_equal(0, response.status_code)
     end
 
     assert_equal(0, error_count)
@@ -401,11 +407,11 @@ class LibhoneyTest < Minitest::Test
       response = @honey.responses.pop
       assert_equal(1, response.metadata)
       assert_kind_of(Exception, response.error)
-      assert_kind_of(HTTP::Response::Status, response.status_code)
+      assert_equal(0, response.status_code)
 
       response = @honey.responses.pop
       assert_equal(2, response.metadata)
-      assert_kind_of(HTTP::Response::Status, response.status_code)
+      assert_equal(202, response.status_code)
     end
   end
 
