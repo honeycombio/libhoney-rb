@@ -44,4 +44,10 @@ class TransmissionClientTest < Minitest::Test
     assert_equal('Libhoney::TransmissionClient: nil or empty required fields (api host, write key, dataset).'\
       ' Will not attempt to send.', e.error.message)
   end
+
+  def test_closing_does_not_error_when_no_threads_have_been_created
+    transmission = Libhoney::TransmissionClient.new
+    drain = true
+    transmission.close(drain) # implicit assertion that this does not raise an error and fail the test
+  end
 end

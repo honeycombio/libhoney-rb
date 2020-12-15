@@ -1,5 +1,9 @@
 # libhoney-rb changelog
 
+## changes pending release
+
+- Fix closing down the client when no threads have been started. (#74 & #76)
+
 ## 1.16.0
 
 ### Fixes:
