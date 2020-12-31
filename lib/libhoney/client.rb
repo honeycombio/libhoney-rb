@@ -70,7 +70,7 @@ module Libhoney
       raise Exception, 'libhoney:  max_concurrent_batches must be greater than 0' if max_concurrent_batches < 1
       raise Exception, 'libhoney:  sample rate must be greater than 0'            if sample_rate < 1
 
-      unless Gem::Dependency.new('ruby', '~> 2.2').match?('ruby', RUBY_VERSION)
+      unless Gem::Dependency.new('ruby', '> 2.2').match?('ruby', RUBY_VERSION)
         raise Exception, 'libhoney:  Ruby versions < 2.2 are not supported'
       end
 
