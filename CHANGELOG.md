@@ -2,6 +2,12 @@
 
 ## changes pending release
 
+## 1.17.0
+
+### Fixes:
+
+- Allow Ruby 3.0.0 (removes overly-pessimistic exception) (#79)
+
 ## 1.16.1
 
 ### Fixes:
