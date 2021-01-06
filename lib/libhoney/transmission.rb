@@ -1,3 +1,5 @@
+require 'addressable/uri'
+require 'excon'
 require 'json'
 require 'timeout'
 require 'libhoney/response'
@@ -267,7 +269,7 @@ module Libhoney
           ).to_s
         end
 
-        client = Excon.new(
+        client = ::Excon.new(
           api_host,
           persistent: true,
           read_timeout: @send_timeout,
