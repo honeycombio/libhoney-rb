@@ -105,6 +105,8 @@ module Libhoney
           # because this is effectively the top-level exception handler for the
           # sender threads, and we don't want those threads to die (leaving
           # nothing consuming the queue).
+          warn "#{self.class.name}: 💥 " + e.message if ['debug', 'trace'].include?(ENV["LOG_LEVEL"])
+          warn e.backtrace.join("\n").to_s if ['trace'].include?(ENV["LOG_LEVEL"])
           begin
             batch.each do |event|
               # nil events in the batch should already have had an error
