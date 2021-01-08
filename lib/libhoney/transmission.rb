@@ -258,24 +258,13 @@ module Libhoney
 
     def build_http_clients
       Hash.new do |h, api_host|
-        if @proxy_config
-          host, port, user, pass = @proxy_config
-          userinfo = "#{user}:#{pass}" if user
-          # TODO: http.rb doesn't include scheme, is this always HTTPS?
-          proxy = URI::HTTPS.build(
-            host: host,
-            port: port,
-            userinfo: userinfo,
-          ).to_s
-        end
-
         client = ::Excon.new(
           api_host,
           persistent: true,
           read_timeout: @send_timeout,
           write_timeout: @send_timeout,
           connect_timeout: @send_timeout,
-          proxy: proxy,
+          proxy: @proxy_config,
           headers: {
             'User-Agent' => @user_agent,
             'Content-Type' => 'application/json'
