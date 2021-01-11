@@ -232,6 +232,8 @@ module Libhoney
       rand(1..sample_rate) != 1
     end
 
+    private
+
     # @api private
     def parse_proxy_config(config)
       case config
