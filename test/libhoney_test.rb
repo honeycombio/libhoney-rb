@@ -91,7 +91,7 @@ end
 
 class LibhoneyProxyConfigArrayParsingTest < Minitest::Test
   def setup
-    # intercept warning emitted for missing writekey
+    # intercept deprecation warning to test its display
     @old_stderr = $stderr
     $stderr = StringIO.new
   end
