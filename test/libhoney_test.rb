@@ -69,9 +69,9 @@ end
 
 class LibhoneyProxyTest < Minitest::Test
   def test_send_now_with_proxy
-    stub_request(:post, 'http://example.com/1/batch/dataset').
-      with(headers: { 'Proxy-Authorization' => /^Basic / }).
-      to_rack(HoneycombServer)
+    stub_request(:post, 'http://example.com/1/batch/dataset')
+      .with(headers: { 'Proxy-Authorization' => /^Basic / })
+      .to_rack(HoneycombServer)
 
     honey = Libhoney::Client.new(writekey: 'writekey',
                                  dataset: 'dataset',
@@ -103,7 +103,7 @@ class LibhoneyProxyConfigArrayParsingTest < Minitest::Test
   def test_proxy_config_array_parsing_removed_in_v2
     assert(
       Gem::Version.new(Libhoney::VERSION) < Gem::Version.new('2.0'),
-      "DEPRECATION: The parsing of an Array passed as proxy_config and this test class should be removed in the 2.0 release."
+      'DEPRECATION: Array passed as proxy_config and this test class should be removed in the 2.0 release.'
     )
   end
 
@@ -115,9 +115,18 @@ class LibhoneyProxyConfigArrayParsingTest < Minitest::Test
     )
 
     assert_equal 'http://proxy-hostname.local', honey.instance_variable_get(:@proxy_config).to_s
-    assert_match(/DEPRECATION WARNING.*proxy_config/, $stderr.string, 'should log a deprecation warning about proxy_config')
-    assert_match(/set http\/https_proxy/, $stderr.string, 'should recommend using environment variables')
-    assert_match(/set proxy_config to a String/, $stderr.string, 'should recommend using a string value for proxy_config')
+    assert_match(
+      /DEPRECATION WARNING.*proxy_config/, $stderr.string,
+      'should log a deprecation warning about proxy_config'
+    )
+    assert_match(
+      %r{set http/https_proxy}, $stderr.string,
+      'should recommend using environment variables'
+    )
+    assert_match(
+      /set proxy_config to a String/, $stderr.string,
+      'should recommend using a string value for proxy_config'
+    )
   end
 
   def test_proxy_config_array_parsing_with_basic_auth
@@ -140,7 +149,6 @@ class LibhoneyProxyConfigArrayParsingTest < Minitest::Test
     Libhoney::Client.new(proxy_config: ['proxy-hostname.local', 'username'])
     assert_match(/unable to parse proxy_config/, $stderr.string, 'should warn when proxy_config is not parsable')
   end
-
 end
 
 class LibhoneyBuilderTest < Minitest::Test

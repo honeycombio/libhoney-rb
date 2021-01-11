@@ -235,15 +235,15 @@ module Libhoney
     # @api private
     def parse_proxy_config(config)
       case config
-      when nil; nil
+      when nil then nil
       when String
         URI.parse(config)
       when Array
-        warn <<~WARNING
-          DEPRECATION WARNING: #{self.class.name} the proxy_config parameter will require a String value, not an Array in libhoney 2.0.
-          To resolve:
-            + recommended: set http/https_proxy environment variables, which take precedence over any option set here, then remove proxy_config parameter from client initialization
-            + set proxy_config to a String containing the forwarding proxy URI (only used if http/https_proxy are not set)
+        warn <<-WARNING
+        DEPRECATION WARNING: #{self.class.name} the proxy_config parameter will require a String value, not an Array in libhoney 2.0.
+        To resolve:
+          + recommended: set http/https_proxy environment variables, which take precedence over any option set here, then remove proxy_config parameter from client initialization
+          + set proxy_config to a String containing the forwarding proxy URI (only used if http/https_proxy are not set)
         WARNING
         host, port, user, password = config
 
@@ -251,13 +251,13 @@ module Libhoney
           uri.userinfo = "#{user}:#{password}" if user
         end
         redacted_config = parsed_config.dup.tap do |uri|
-          uri.password = "REDACTED" unless (uri.password.nil? || uri.password.empty?)
+          uri.password = 'REDACTED' unless uri.password.nil? || uri.password.empty?
         end
         warn "The array config given has been assumed to mean: #{redacted_config}"
         parsed_config
       end
-    rescue URI::Error => error
-      warn "#{self.class.name}: unable to parse proxy_config. Detail: #{error.class}: #{error.message}"
+    rescue URI::Error => e
+      warn "#{self.class.name}: unable to parse proxy_config. Detail: #{e.class}: #{e.message}"
     end
   end
 end
