@@ -2,6 +2,19 @@
 
 ## changes pending release
 
+## 1.18.0
+
+### Improvements
+
+- replace HTTP client library to reduce external dependencies (#81)
+
+### Deprecations
+
+- `Libhoney::Client.new(proxy_config: _)`: the `proxy_config` parameter for client
+  creation will no longer accept an Array in the next major version. The recommended
+  way to configure the client for operation behind forwarding web proxies is to set
+  http/https/no_proxy environment variables appropriately.
+
 ## 1.17.0
 
 ### Fixes:
