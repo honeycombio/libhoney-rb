@@ -65,21 +65,89 @@ class LibhoneyDefaultTest < Minitest::Test
     assert_equal 100, honey.max_concurrent_batches
     assert_equal 1500, honey.pending_work_capacity
   end
+end
 
+class LibhoneyProxyTest < Minitest::Test
   def test_send_now_with_proxy
-    via = Spy.on_instance_method(HTTP::Client, :via)
+    stub_request(:post, 'http://example.com/1/batch/dataset')
+      .with(headers: { 'Proxy-Authorization' => /^Basic / })
+      .to_rack(HoneycombServer)
 
     honey = Libhoney::Client.new(writekey: 'writekey',
                                  dataset: 'dataset',
                                  sample_rate: 1,
                                  api_host: 'http://example.com',
-                                 proxy_config: ['myproxy.example.com', 8080])
+                                 proxy_config: 'http://username:password@proxy-hostname.local:8080')
     builder = honey.builder
     builder.send_now('argle' => 'bargle')
 
     honey.close
 
-    assert via.has_been_called?
+    response = honey.responses.pop
+    assert_nil(response.error)
+    assert_equal(202, response.status_code)
+  end
+end
+
+class LibhoneyProxyConfigArrayParsingTest < Minitest::Test
+  def setup
+    # intercept deprecation warning to test its display
+    @old_stderr = $stderr
+    $stderr = StringIO.new
+  end
+
+  def teardown
+    $stderr = @old_stderr
+  end
+
+  def test_proxy_config_array_parsing_removed_in_v2
+    assert(
+      Gem::Version.new(Libhoney::VERSION) < Gem::Version.new('2.0'),
+      'DEPRECATION: Array passed as proxy_config and this test class should be removed in the 2.0 release.'
+    )
+  end
+
+  def test_deprecation_warning_when_proxy_config_is_array
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      proxy_config: ['proxy-hostname.local']
+    )
+
+    assert_equal 'http://proxy-hostname.local', honey.instance_variable_get(:@proxy_config).to_s
+    assert_match(
+      /DEPRECATION WARNING.*proxy_config/, $stderr.string,
+      'should log a deprecation warning about proxy_config'
+    )
+    assert_match(
+      %r{set http/https_proxy}, $stderr.string,
+      'should recommend using environment variables'
+    )
+    assert_match(
+      /set proxy_config to a String/, $stderr.string,
+      'should recommend using a string value for proxy_config'
+    )
+  end
+
+  def test_proxy_config_array_parsing_with_basic_auth
+    with_password = Libhoney::Client.new(proxy_config: ['proxy-hostname.local', 8080, 'username', 'password'])
+    assert_equal(
+      'http://username:password@proxy-hostname.local:8080',
+      with_password.instance_variable_get(:@proxy_config).to_s
+    )
+  end
+
+  def test_proxy_config_array_parsing_with_basic_auth_no_password
+    no_password = Libhoney::Client.new(proxy_config: ['proxy-hostname.local', 8080, 'username'])
+    assert_equal(
+      'http://username:@proxy-hostname.local:8080',
+      no_password.instance_variable_get(:@proxy_config).to_s
+    )
+  end
+
+  def test_proxy_config_array_parsing_with_bad_array
+    Libhoney::Client.new(proxy_config: ['proxy-hostname.local', 'username'])
+    assert_match(/unable to parse proxy_config/, $stderr.string, 'should warn when proxy_config is not parsable')
   end
 end
 
@@ -359,7 +427,7 @@ class LibhoneyTest < Minitest::Test
     while (response = @honey.responses.pop)
       error_count -= 1
       assert_kind_of(Exception, response.error)
-      assert_kind_of(HTTP::Response::Status, response.status_code)
+      assert_equal(0, response.status_code)
     end
 
     assert_equal(0, error_count)
@@ -401,11 +469,11 @@ class LibhoneyTest < Minitest::Test
       response = @honey.responses.pop
       assert_equal(1, response.metadata)
       assert_kind_of(Exception, response.error)
-      assert_kind_of(HTTP::Response::Status, response.status_code)
+      assert_equal(0, response.status_code)
 
       response = @honey.responses.pop
       assert_equal(2, response.metadata)
-      assert_kind_of(HTTP::Response::Status, response.status_code)
+      assert_equal(202, response.status_code)
     end
   end
 

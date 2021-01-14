@@ -16,6 +16,7 @@ Metrics/BlockLength:
 Metrics/ClassLength:
   Max: 200
   Exclude:
+    - lib/libhoney/transmission.rb # Should this remain so large?
     - test/*
 
 Metrics/MethodLength:

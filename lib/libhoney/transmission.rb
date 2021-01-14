@@ -1,3 +1,5 @@
+require 'addressable/uri'
+require 'excon'
 require 'json'
 require 'timeout'
 require 'libhoney/response'
@@ -93,7 +95,7 @@ module Libhoney
           }
 
           response = http.post(
-            "/1/batch/#{Addressable::URI.escape(dataset)}",
+            path: "/1/batch/#{Addressable::URI.escape(dataset)}",
             body: body,
             headers: headers
           )
@@ -103,6 +105,8 @@ module Libhoney
           # because this is effectively the top-level exception handler for the
           # sender threads, and we don't want those threads to die (leaving
           # nothing consuming the queue).
+          warn "#{self.class.name}: 💥 " + e.message if %w[debug trace].include?(ENV['LOG_LEVEL'])
+          warn e.backtrace.join("\n").to_s if ['trace'].include?(ENV['LOG_LEVEL'])
           begin
             batch.each do |event|
               # nil events in the batch should already have had an error
@@ -187,7 +191,7 @@ module Libhoney
 
     def process_response(http_response, before, batch)
       index = 0
-      http_response.parse.each do |event|
+      JSON.parse(http_response.body).each do |event|
         index += 1 while batch[index].nil? && index < batch.size
         break unless (batched_event = batch[index])
 
@@ -256,14 +260,19 @@ module Libhoney
 
     def build_http_clients
       Hash.new do |h, api_host|
-        client = HTTP.timeout(connect: @send_timeout, write: @send_timeout, read: @send_timeout)
-                     .persistent(api_host)
-                     .headers(
-                       'User-Agent' => @user_agent,
-                       'Content-Type' => 'application/json'
-                     )
+        client = ::Excon.new(
+          api_host,
+          persistent: true,
+          read_timeout: @send_timeout,
+          write_timeout: @send_timeout,
+          connect_timeout: @send_timeout,
+          proxy: @proxy_config,
+          headers: {
+            'User-Agent' => @user_agent,
+            'Content-Type' => 'application/json'
+          }
+        )
 
-        client = client.via(*@proxy_config) unless @proxy_config.nil?
         h[api_host] = client
       end
     end
