@@ -1,7 +1,8 @@
 require 'test_helper'
 require 'libhoney'
+require 'libhoney/experimental_transmission'
 
-class TransmissionClientTest < Minitest::Test
+class ExperimentalTransmissionClientTest < Minitest::Test
   def test_event_with_nil_required_fields_is_rejected
     mock_builder = Minitest::Mock.new
     mock_builder.expect :writekey, nil
@@ -12,7 +13,7 @@ class TransmissionClientTest < Minitest::Test
     event = Libhoney::Event.new(nil, mock_builder)
 
     response_queue = SizedQueue.new(10)
-    transmission = Libhoney::TransmissionClient.new(responses: response_queue)
+    transmission = Libhoney::ExperimentalTransmissionClient.new(responses: response_queue)
     transmission.add(event)
 
     # check event added to repsonse queue
@@ -20,7 +21,7 @@ class TransmissionClientTest < Minitest::Test
     e = response_queue.pop
     refute_nil(e)
     refute_nil(e.error)
-    assert_equal('Libhoney::TransmissionClient: nil or empty required fields (api_host, writekey, dataset).'\
+    assert_equal('Libhoney::ExperimentalTransmissionClient: nil or empty required fields (api_host, writekey, dataset).'\
       ' Will not attempt to send.', e.error.message)
   end
 
@@ -34,7 +35,7 @@ class TransmissionClientTest < Minitest::Test
     event = Libhoney::Event.new(nil, mock_builder)
 
     response_queue = SizedQueue.new(10)
-    transmission = Libhoney::TransmissionClient.new(responses: response_queue)
+    transmission = Libhoney::ExperimentalTransmissionClient.new(responses: response_queue)
     transmission.add(event)
 
     # check event added to repsonse queue
@@ -42,12 +43,12 @@ class TransmissionClientTest < Minitest::Test
     e = response_queue.pop
     refute_nil(e)
     refute_nil(e.error)
-    assert_equal('Libhoney::TransmissionClient: nil or empty required fields (api_host, writekey, dataset).'\
+    assert_equal('Libhoney::ExperimentalTransmissionClient: nil or empty required fields (api_host, writekey, dataset).'\
       ' Will not attempt to send.', e.error.message)
   end
 
   def test_closing_does_not_error_when_no_threads_have_been_created
-    transmission = Libhoney::TransmissionClient.new
+    transmission = Libhoney::ExperimentalTransmissionClient.new
     drain = true
     transmission.close(drain) # implicit assertion that this does not raise an error and fail the test
   end

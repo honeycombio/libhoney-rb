@@ -36,9 +36,9 @@ module Libhoney
       @send_queue   = Queue.new
       @threads      = []
       @lock         = Mutex.new
-      # use a SizedQueue so the producer will block on adding to the batch_queue when @block_on_send is true
-      @batch_queue  = SizedQueue.new(@pending_work_capacity)
       @batch_thread = nil
+
+      setup_batch_queue
     end
 
     def add(event)
@@ -51,26 +51,6 @@ module Libhoney
       end
 
       ensure_threads_running
-    end
-
-    def event_valid(event)
-      invalid = []
-      invalid.push('api host') if event.api_host.nil? || event.api_host.empty?
-      invalid.push('write key') if event.writekey.nil? || event.writekey.empty?
-      invalid.push('dataset') if event.dataset.nil? || event.dataset.empty?
-
-      unless invalid.empty?
-        e = StandardError.new("#{self.class.name}: nil or empty required fields (#{invalid.join(', ')})"\
-          '. Will not attempt to send.')
-        Response.new(error: e).tap do |error_response|
-          error_response.metadata = event.metadata
-          enqueue_response(error_response)
-        end
-
-        return false
-      end
-
-      true
     end
 
     def send_loop
@@ -133,23 +113,37 @@ module Libhoney
     end
 
     def close(drain)
-      # if drain is false, clear the remaining unprocessed events from the queue
-      unless drain
-        @batch_queue.clear
-        @send_queue.clear
+      @lock.synchronize do
+        # if drain is false, clear the remaining unprocessed events from the queue
+        if drain
+          warn "#{self.class.name} - close: draining events" if %w[debug trace].include?(ENV['LOG_LEVEL'])
+        else
+          warn "#{self.class.name} - close: drain is false; deleting unsent events instead" if %w[debug trace].include?(ENV['LOG_LEVEL'])
+          @batch_queue.clear
+          @send_queue.clear
+        end
+
+        @batch_queue.enq(nil)
+        if @batch_thread.nil?
+          warn "#{self.class.name} - close: no batch_thread to end" if %w[trace].include?(ENV['LOG_LEVEL'])
+        else
+          warn "#{self.class.name} - close: end batch_thread" if %w[trace].include?(ENV['LOG_LEVEL'])
+          @batch_thread.join(1.0) # limit the amount of time we'll wait for the thread to end
+          warn "#{self.class.name} - close: batch_thread ended" if %w[trace].include?(ENV['LOG_LEVEL'])
+        end
+
+        # send @threads.length number of nils so each thread will fall out of send_loop
+        @threads.length.times { @send_queue << nil }
+
+        @threads.each(&:join)
+        warn "#{self.class.name} - close: sending threads ended" if %w[trace].include?(ENV['LOG_LEVEL'])
+        @threads = []
       end
 
-      @batch_queue.enq(nil)
-      @batch_thread.join unless @batch_thread.nil?
-
-      # send @threads.length number of nils so each thread will fall out of send_loop
-      @threads.length.times { @send_queue << nil }
-
-      @threads.each(&:join)
-      @threads = []
-
       enqueue_response(nil)
+      warn "#{self.class.name} - close: response processors notified" if %w[trace].include?(ENV['LOG_LEVEL'])
 
+      warn "#{self.class.name} - close: close complete" if %w[debug trace].include?(ENV['LOG_LEVEL'])
       0
     end
 
@@ -179,6 +173,33 @@ module Libhoney
     end
 
     private
+
+    def setup_batch_queue
+      # use a SizedQueue so the producer will block on adding to the batch_queue when @block_on_send is true
+      @batch_queue  = SizedQueue.new(@pending_work_capacity)
+    end
+
+    def event_valid(event)
+      missing_required_fields = [:api_host, :writekey, :dataset]
+        .select { |required_field|
+          event.public_send(required_field).nil? || event.public_send(required_field).empty?
+        }
+
+      if missing_required_fields.empty?
+        true
+      else
+        enqueue_response(
+          Response.new(
+            metadata: event.metadata,
+            error: StandardError.new(
+              "#{self.class.name}: nil or empty required fields (#{missing_required_fields.join(', ')})"\
+              '. Will not attempt to send.'
+            )
+          )
+        )
+        false
+      end
+    end
 
     ##
     # Enqueues a response to the responses queue suppressing ThreadError when

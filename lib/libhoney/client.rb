@@ -198,22 +198,42 @@ module Libhoney
     # @api private
     def send_event(event)
       @lock.synchronize do
-        transmission_client_params = {
-          max_batch_size: @max_batch_size,
-          send_frequency: @send_frequency,
-          max_concurrent_batches: @max_concurrent_batches,
-          pending_work_capacity: @pending_work_capacity,
-          responses: @responses,
-          block_on_send: @block_on_send,
-          block_on_responses: @block_on_responses,
-          user_agent_addition: @user_agent_addition,
-          proxy_config: @proxy_config
-        }
-
         @transmission ||= TransmissionClient.new(**transmission_client_params)
       end
 
       @transmission.add(event)
+    end
+
+    ##
+    # Parameters to pass to a transmission based on client config.
+    #
+    # @api private
+    def transmission_client_params
+      {
+        max_batch_size: @max_batch_size,
+        send_frequency: @send_frequency,
+        max_concurrent_batches: @max_concurrent_batches,
+        pending_work_capacity: @pending_work_capacity,
+        responses: @responses,
+        block_on_send: @block_on_send,
+        block_on_responses: @block_on_responses,
+        user_agent_addition: @user_agent_addition,
+        proxy_config: @proxy_config
+      }
+    end
+
+    ##
+    # swap out the current transmission for a different one
+    #
+    # The transmission passed in must have been fully configured; no defaults from the
+    # Libhoney client will be applied.
+    #
+    # @param transmission [Transmission] a fully configured instance of a type of transmission
+    # @api private
+    def change_transmission(transmission_instance)
+      @lock.synchronize do
+        @transmission = transmission_instance
+      end
     end
 
     # @api private
