@@ -51,13 +51,17 @@ module Libhoney
     # @param block_on_responses [Boolean] if true, block if there is no thread reading from the response queue
     # @param pending_work_capacity [Fixnum] defaults to 1000. If the queue of
     #   pending events exceeds 1000, this client will start dropping events.
-    # @param proxy_config [String, Array, nil] proxy connection information
-    #   nil: (default, recommended) connection proxying will be determined from any http_proxy, https_proxy, and no_proxy environment
-    #     variables set for the process.
-    #   String: the value must be the URI for connecting to a forwarding web proxy. Must be parsable by stdlib URI.
-    #   Array: (deprecated, removal in v2.0) the value must have one and at most four elements: e.g. ['host', port, 'username', 'password'].
-    #     The assumption is that the TCP connection will be tunneled via HTTP, so the assumed scheme is 'http://'
-    #     'host' is required. 'port' is optional (default:80), unless a 'username' is included. 'password' is optional.
+    # @param proxy_config [String, Array, nil] proxy connection information,
+    #   how the types will be handled:
+    #     nil: (default, recommended)
+    #   Connection proxying will be determined from any +http_proxy+, +https_proxy+, and +no_proxy+ environment
+    #   variables set for the process.
+    #     String:
+    #   The value must be the URI for connecting to a forwarding web proxy. Must be parsable by stdlib URI.
+    #     Array: (deprecated, removal in v2.0)
+    #   The value must have one and at most four elements: e.g. +['host', port, 'username', 'password']+.
+    #   The assumption is that the TCP connection will be tunneled via HTTP, so the assumed scheme is +http://+.
+    #   +host+ is required. +port+ is optional (default:80), unless a +username+ is included. +password+ is optional.
     # rubocop:disable Metrics/ParameterLists
     def initialize(writekey: nil,
                    dataset: nil,
