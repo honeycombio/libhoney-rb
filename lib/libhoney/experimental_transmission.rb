@@ -31,7 +31,7 @@ module Libhoney
         # have a ThreadError raised because we could not add to the queue.
         timeout = @block_on_send ? :never : 0
         @batch_queue.enq(event, timeout)
-      rescue ThreadError => error
+      rescue PushTimedOut
         # happens if the queue was full and block_on_send = false.
         warn "#{self.class.name}: batch queue full, dropping event." if %w[debug trace].include?(ENV['LOG_LEVEL'])
       end
@@ -53,9 +53,9 @@ module Libhoney
           end
 
           break
-        rescue Libhoney::SizedQueueWithTimeout::PopTimedOut => timeout
-          warn "#{self.class.name}: ⏱ " + timeout.message if %w[trace].include?(ENV['LOG_LEVEL'])
-        rescue Exception => e
+        rescue Libhoney::SizedQueueWithTimeout::PopTimedOut => e
+          warn "#{self.class.name}: ⏱ " + e.message if %w[trace].include?(ENV['LOG_LEVEL'])
+        rescue Exception => e # rubocop:disable Lint/RescueException
           warn "#{self.class.name}: 💥 " + e.message if %w[debug trace].include?(ENV['LOG_LEVEL'])
           warn e.backtrace.join("\n").to_s if ['trace'].include?(ENV['LOG_LEVEL'])
         ensure
@@ -72,9 +72,8 @@ module Libhoney
       # override super()'s @batch_queue = SizedQueue.new(); use our SizedQueueWithTimeout:
       # + block on adding events to the batch_queue when queue is full and @block_on_send is true
       # + the queue knows how to limit size and how to time-out pushes and pops
-      @batch_queue  = SizedQueueWithTimeout.new(@pending_work_capacity)
-      warn "⚠️🐆 #{self.class.name} in use! This client may drop data, consume all your memory, erase your credit cards, or cause skin irritation."
+      @batch_queue = SizedQueueWithTimeout.new(@pending_work_capacity)
+      warn "⚠️🐆 #{self.class.name} in use! It may drop data, consume all your memory, or cause skin irritation."
     end
-
   end
 end

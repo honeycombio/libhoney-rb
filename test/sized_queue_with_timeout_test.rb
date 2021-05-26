@@ -15,7 +15,7 @@ class SizedQueueWithTimeoutTest < Minitest::Test
 
   def test_trying_to_push_on_a_full_queue
     q = Libhoney::SizedQueueWithTimeout.new(3)
-    consumer = Thread.new do
+    _consumer = Thread.new do
       q.pop
       sleep 1
     end
