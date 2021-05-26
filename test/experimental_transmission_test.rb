@@ -16,13 +16,16 @@ class ExperimentalTransmissionClientTest < Minitest::Test
     transmission = Libhoney::ExperimentalTransmissionClient.new(responses: response_queue)
     transmission.add(event)
 
-    # check event added to repsonse queue
+    # check event added to response queue
     assert_equal(1, response_queue.length)
     e = response_queue.pop
     refute_nil(e)
     refute_nil(e.error)
-    assert_equal('Libhoney::ExperimentalTransmissionClient: nil or empty required fields (api_host, writekey, dataset).'\
-      ' Will not attempt to send.', e.error.message)
+    assert_equal(
+      'Libhoney::ExperimentalTransmissionClient: nil or empty required fields (api_host, writekey, dataset).'\
+      ' Will not attempt to send.',
+      e.error.message
+    )
   end
 
   def test_event_with_empty_required_fields_is_rejected
@@ -38,13 +41,16 @@ class ExperimentalTransmissionClientTest < Minitest::Test
     transmission = Libhoney::ExperimentalTransmissionClient.new(responses: response_queue)
     transmission.add(event)
 
-    # check event added to repsonse queue
+    # check event added to response queue
     assert_equal(1, response_queue.length)
     e = response_queue.pop
     refute_nil(e)
     refute_nil(e.error)
-    assert_equal('Libhoney::ExperimentalTransmissionClient: nil or empty required fields (api_host, writekey, dataset).'\
-      ' Will not attempt to send.', e.error.message)
+    assert_equal(
+      'Libhoney::ExperimentalTransmissionClient: nil or empty required fields (api_host, writekey, dataset).'\
+      ' Will not attempt to send.',
+      e.error.message
+    )
   end
 
   def test_closing_does_not_error_when_no_threads_have_been_created

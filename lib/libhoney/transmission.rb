@@ -118,31 +118,25 @@ module Libhoney
         if drain
           warn "#{self.class.name} - close: draining events" if %w[debug trace].include?(ENV['LOG_LEVEL'])
         else
-          warn "#{self.class.name} - close: drain is false; deleting unsent events instead" if %w[debug trace].include?(ENV['LOG_LEVEL'])
+          warn "#{self.class.name} - close: deleting unsent events" if %w[debug trace].include?(ENV['LOG_LEVEL'])
           @batch_queue.clear
           @send_queue.clear
         end
 
         @batch_queue.enq(nil)
         if @batch_thread.nil?
-          warn "#{self.class.name} - close: no batch_thread to end" if %w[trace].include?(ENV['LOG_LEVEL'])
         else
-          warn "#{self.class.name} - close: end batch_thread" if %w[trace].include?(ENV['LOG_LEVEL'])
           @batch_thread.join(1.0) # limit the amount of time we'll wait for the thread to end
-          warn "#{self.class.name} - close: batch_thread ended" if %w[trace].include?(ENV['LOG_LEVEL'])
         end
 
         # send @threads.length number of nils so each thread will fall out of send_loop
         @threads.length.times { @send_queue << nil }
 
         @threads.each(&:join)
-        warn "#{self.class.name} - close: sending threads ended" if %w[trace].include?(ENV['LOG_LEVEL'])
         @threads = []
       end
 
       enqueue_response(nil)
-      warn "#{self.class.name} - close: response processors notified" if %w[trace].include?(ENV['LOG_LEVEL'])
-
       warn "#{self.class.name} - close: close complete" if %w[debug trace].include?(ENV['LOG_LEVEL'])
       0
     end
@@ -176,14 +170,15 @@ module Libhoney
 
     def setup_batch_queue
       # use a SizedQueue so the producer will block on adding to the batch_queue when @block_on_send is true
-      @batch_queue  = SizedQueue.new(@pending_work_capacity)
+      @batch_queue = SizedQueue.new(@pending_work_capacity)
     end
 
+    REQUIRED_EVENT_FIELDS = %i[api_host writekey dataset].freeze
+
     def event_valid(event)
-      missing_required_fields = [:api_host, :writekey, :dataset]
-        .select { |required_field|
-          event.public_send(required_field).nil? || event.public_send(required_field).empty?
-        }
+      missing_required_fields = REQUIRED_EVENT_FIELDS.select do |required_field|
+        event.public_send(required_field).nil? || event.public_send(required_field).empty?
+      end
 
       if missing_required_fields.empty?
         true
