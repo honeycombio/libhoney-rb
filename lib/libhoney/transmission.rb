@@ -190,15 +190,32 @@ module Libhoney
     end
 
     def process_response(http_response, before, batch)
-      index = 0
-      JSON.parse(http_response.body).each do |event|
-        index += 1 while batch[index].nil? && index < batch.size
-        break unless (batched_event = batch[index])
+      if 200 == http_response.status
+        index = 0
+        JSON.parse(http_response.body).each do |event|
+          index += 1 while batch[index].nil? && index < batch.size
+          break unless (batched_event = batch[index])
 
-        Response.new(status_code: event['status']).tap do |response|
-          response.duration = Time.now - before
-          response.metadata = batched_event.metadata
-          enqueue_response(response)
+          Response.new(status_code: event['status']).tap do |response|
+            response.duration = Time.now - before
+            response.metadata = batched_event.metadata
+            enqueue_response(response)
+          end
+        end
+      else
+        error = JSON.parse(http_response.body)['error']
+        if %w[debug trace].include?(ENV['LOG_LEVEL'])
+          warn "#{self.class.name}: error sending data to Honeycomb - #{http_response.status} #{error}"
+        end
+        batch.each do |batched_event|
+          enqueue_response(
+            Response.new(
+              status_code: http_response.status,
+              duration: (Time.now - before),
+              metadata: batched_event.metadata,
+              error: RuntimeError.new(error)
+            )
+          )
         end
       end
     end
