@@ -9,18 +9,19 @@ Style/Documentation:
 Lint/RescueException:
   Exclude:
     - 'lib/libhoney/transmission.rb'
+    - 'lib/libhoney/experimental_transmission.rb'
 
 Metrics/BlockLength:
   Max: 35
 
 Metrics/ClassLength:
-  Max: 200
+  Max: 300
   Exclude:
     - lib/libhoney/transmission.rb # Should this remain so large?
     - test/*
 
 Metrics/MethodLength:
-  Max: 40
+  Max: 45
   Exclude:
     - lib/libhoney/transmission.rb
     - test/*

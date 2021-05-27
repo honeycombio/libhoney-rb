@@ -47,22 +47,46 @@ module Libhoney
 
       loop do
         begin
+          # an event on the batch_queue
+          #   1. pops out and is truthy
+          #   2. gets included in the current batch
+          #   3. while waits for another event
           while (event = @batch_queue.pop(@send_frequency))
             key = [event.api_host, event.writekey, event.dataset]
             batched_events[key] << event
           end
 
+          # a nil on the batch_queue
+          #   1. pops out and is falsy
+          #   2. ends the event-popping while do..end
+          #   3. breaks the loop
+          #   4. flushes the current batch
+          #   5. ends the batch_loop
           break
-        rescue Libhoney::SizedQueueWithTimeout::PopTimedOut => e
+
+        # a timeout expiration waiting for an event
+        #   1. skips the break and is rescued
+        #   2. triggers the ensure to flush the current batch
+        #   3. begins the loop again with an updated next_send_time
+        rescue PopTimedOut => e
           warn "#{self.class.name}: ⏱ " + e.message if %w[trace].include?(ENV['LOG_LEVEL'])
-        rescue Exception => e # rubocop:disable Lint/RescueException
+
+        # any exception occurring in this loop should not take down the actual
+        # instrumented Ruby process, so handle here and log that there is trouble
+        rescue Exception => e
           warn "#{self.class.name}: 💥 " + e.message if %w[debug trace].include?(ENV['LOG_LEVEL'])
           warn e.backtrace.join("\n").to_s if ['trace'].include?(ENV['LOG_LEVEL'])
+
+        # regardless of the exception, figure out whether enough time has passed to
+        # send the current batched events, if so, send them and figure out the next send time
+        # before going back to the top of the loop
         ensure
           next_send_time = flush_batched_events(batched_events) if Time.now > next_send_time
         end
       end
 
+      # don't need to capture the next_send_time here because the batch_loop is exiting
+      # for some reason (probably transmission.close)
       flush_batched_events(batched_events)
     end
 
