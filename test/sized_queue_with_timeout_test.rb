@@ -19,6 +19,20 @@ class PopFromSizedQueueWithTimeoutTest < Minitest::Test
       q.pop(0.001)
     end
   end
+
+  def test_timeout_with_custom_timeout_policy
+    q = Libhoney::SizedQueueWithTimeout.new
+
+    # instead of raising a timeout exception, return a default value
+    result = q.pop(0.001) { :and_now_for_something_completely_different }
+    assert_equal :and_now_for_something_completely_different, result
+
+    # allow caller to provide a custom exception
+    exception = assert_raises StandardError do
+      q.pop(0.001) { raise StandardError, 'some custom business logic error' }
+    end
+    assert_equal 'some custom business logic error', exception.message
+  end
 end
 
 class PushToSizedQueueWithTimeoutTest < Minitest::Test
