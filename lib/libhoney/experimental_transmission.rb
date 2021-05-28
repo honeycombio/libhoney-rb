@@ -31,7 +31,7 @@ module Libhoney
         # have a ThreadError raised because we could not add to the queue.
         timeout = @block_on_send ? :never : 0
         @batch_queue.enq(event, timeout)
-      rescue PushTimedOut
+      rescue Libhoney::SizedQueueWithTimeout::PushTimedOut
         # happens if the queue was full and block_on_send = false.
         warn "#{self.class.name}: batch queue full, dropping event." if %w[debug trace].include?(ENV['LOG_LEVEL'])
       end
@@ -68,7 +68,7 @@ module Libhoney
         #   1. skips the break and is rescued
         #   2. triggers the ensure to flush the current batch
         #   3. begins the loop again with an updated next_send_time
-        rescue PopTimedOut => e
+        rescue Libhoney::SizedQueueWithTimeout::PopTimedOut => e
           warn "#{self.class.name}: ⏱ " + e.message if %w[trace].include?(ENV['LOG_LEVEL'])
 
         # any exception occurring in this loop should not take down the actual
