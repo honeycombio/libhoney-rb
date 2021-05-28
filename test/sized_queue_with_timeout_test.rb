@@ -48,6 +48,21 @@ class PushToSizedQueueWithTimeoutTest < Minitest::Test
     end
   end
 
+  def test_timeout_with_custom_timeout_policy
+    size_limit = 5
+    q = Libhoney::SizedQueueWithTimeout.new(size_limit)
+    size_limit.times do |n|
+      q.push(n)
+    end
+    assert q.send(:full?)
+
+    # allow caller to provide a custom exception
+    exception = assert_raises StandardError do
+      q.push(:nope, 0.001) { raise StandardError, 'some custom business logic error' }
+    end
+    assert_equal 'some custom business logic error', exception.message
+  end
+
   def test_wait_for_available_space
     size_limit = 3
 
