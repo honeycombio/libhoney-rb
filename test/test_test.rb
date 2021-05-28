@@ -1,3 +1,4 @@
+require 'test_helper'
 require 'libhoney'
 
 # Tests for TestClient, which provides support for testing instrumented code.
