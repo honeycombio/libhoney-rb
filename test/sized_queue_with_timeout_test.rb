@@ -16,7 +16,7 @@ class PopFromSizedQueueWithTimeoutTest < Minitest::Test
   def test_timeout_waiting_for_item
     q = Libhoney::SizedQueueWithTimeout.new
     assert_raises Libhoney::SizedQueueWithTimeout::PopTimedOut do
-      q.pop(0.01)
+      q.pop(0.001)
     end
   end
 end
@@ -30,7 +30,7 @@ class PushToSizedQueueWithTimeoutTest < Minitest::Test
     end
     assert q.send(:full?)
     assert_raises Libhoney::SizedQueueWithTimeout::PushTimedOut do
-      q.push(:nope, 0.01)
+      q.push(:nope, 0.001)
     end
   end
 
