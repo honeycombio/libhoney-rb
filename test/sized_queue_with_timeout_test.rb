@@ -13,6 +13,20 @@ class PopFromSizedQueueWithTimeoutTest < Minitest::Test
     assert_equal('hello', consumer.value)
   end
 
+  def test_popping_a_nil
+    Thread.current.name = "the_test"
+    q = Libhoney::SizedQueueWithTimeout.new
+    popper = Thread.new do
+      Thread.current.name = "popper"
+      q.pop
+    end
+    test_waits_for { popper.status == 'sleep' }
+    assert_equal(:sup, popper.value)
+    puts "Pushin' a nil"
+    q.push nil
+    assert_equal(nil, popper.value)
+  end
+
   def test_timeout_waiting_for_item
     q = Libhoney::SizedQueueWithTimeout.new
     assert_raises Libhoney::SizedQueueWithTimeout::PopTimedOut do
