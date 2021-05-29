@@ -36,7 +36,7 @@ module Libhoney
     class PopTimedOut < ThreadError; end
 
     ##
-    # @param max_size [Integer, :infinite] the size limit for this queue
+    # @param max_size [Integer, Float::INFINITY] the size limit for this queue
     # @param options [Hash] optional dependencies to inject, primarily for testing
     # @option options [QLock, Mutex] :lock the lock for synchronizing queue state change
     # @option options [QCondition] :space_available_condition the condition variable
@@ -45,7 +45,7 @@ module Libhoney
     # @option options [QCondition] :item_available_condition the condition variable
     #   to wait/signal on for an item being added to the queue; when provided, must
     #   be accompanied by an +:space_available_condition+ and the shared +:lock+
-    def initialize(max_size = :infinite, options = {})
+    def initialize(max_size = Float::INFINITY, options = {})
       @items           = []
       @max_size        = max_size
       @lock            = options.fetch(:lock) { QLock.new }
@@ -115,8 +115,6 @@ module Libhoney
     # @return [true/false]
     # @api private
     def full?
-      return false if @max_size == :infinite
-
       @max_size <= @items.size
     end
 
