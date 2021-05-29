@@ -58,4 +58,10 @@ class ExperimentalTransmissionClientTest < Minitest::Test
     drain = true
     transmission.close(drain) # implicit assertion that this does not raise an error and fail the test
   end
+
+  def test_closing_with_no_drain_does_not_error
+    transmission = Libhoney::ExperimentalTransmissionClient.new
+    drain = false
+    transmission.close(drain) # implicit assertion that this does not raise an error and fail the test
+  end
 end

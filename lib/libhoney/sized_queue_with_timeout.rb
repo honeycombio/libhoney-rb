@@ -61,7 +61,8 @@ module Libhoney
     #   +:never+ to wait "forever"
     # @param timeout_policy [#call] defaults to +-> { raise PushTimedOut }+ - a lambda/Proc/callable, what to do
     #   when the timeout expires
-    # @raise PushTimedOut
+    #
+    # @raise {PushTimedOut}
     def push(obj, timeout = :never, &timeout_policy)
       timeout_policy ||= -> { raise PushTimedOut }
 
@@ -80,12 +81,13 @@ module Libhoney
     #   +:never+ to wait "forever"
     # @param timeout_policy [#call] defaults to +-> { raise PopTimedOut }+ - a lambda/Proc/callable, what to do
     #   when the timeout expires
+    #
     # @return [Object]
-    # @raise PopTimedOut
+    # @raise {PopTimedOut}
     def pop(timeout = :never, &timeout_policy)
       timeout_policy ||= -> { raise PopTimedOut }
 
-      wait_for_condition(@item_available, -> { !@items.empty? }, timeout, timeout_policy) do
+      wait_for_condition(@item_available, -> { !empty? }, timeout, timeout_policy) do
         item = @items.shift
         @space_available.signal unless full?
         item
@@ -94,12 +96,38 @@ module Libhoney
     alias deq pop
     alias shift pop
 
+    ##
+    # Removes all objects from the queue. They are cast into the abyss never to be seen again.
+    #
+    def clear
+      @lock.synchronize do
+        @items = []
+        @space_available.signal unless full?
+      end
+    end
+
     private
 
+    ##
+    # Whether the queue is at capacity. Must be called with the queue's lock
+    # or the answer won't matter if you try to change state based on it.
+    #
+    # @return [true/false]
+    # @api private
     def full?
       return false if @max_size == :infinite
 
       @max_size <= @items.size
+    end
+
+    ##
+    # Whether the queue is empty. Must be called with the queue's lock or the
+    # answer won't matter if you try to change state based on it.
+    #
+    # @return [true/false]
+    # @api private
+    def empty?
+      @items.empty?
     end
 
     # a generic conditional variable wait with a timeout loop
