@@ -44,7 +44,7 @@ class ExperimentalLibhoneyTest < Minitest::Test
 
     # ensure that the thread above is waiting for
     # an event to be pushed onto the queue
-    sleep 0.1 while t.status != 'sleep'
+    test_waits_for { t.status == 'sleep' }
 
     (1..times_to_test).each do |i|
       event = @honey.event
