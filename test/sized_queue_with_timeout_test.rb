@@ -111,7 +111,7 @@ class PushToSizedQueueWithTimeoutTest < Minitest::Test
     assert consumer.interrupted_by?(space_available, :signal)
     consumer.finish
 
-    # confirm that the producer as able to finish its work after resuming
+    # confirm that the producer is able to finish its work after resuming
     # from its wait
     assert producer.resume(ignore: [:signal]).finished?
 
@@ -121,6 +121,75 @@ class PushToSizedQueueWithTimeoutTest < Minitest::Test
     end
     # confirm we get the rest of the items
     assert_equal(['item 2', 'item 3', 'item 4'], consumer.last_return_value)
+  end
+end
+
+class ClearASizedQueueWithTimeoutTest < Minitest::Test
+  def test_clearing_a_queue
+    size_limit = 5
+    q = Libhoney::SizedQueueWithTimeout.new(size_limit)
+    size_limit.times do |n|
+      q.push(n)
+    end
+    assert q.send(:full?)
+    q.clear
+    assert q.instance_variable_get(:@items).empty?
+  end
+
+  def test_clear_signals_space_is_available
+    size_limit = 3
+
+    q = Libhoney::SizedQueueWithTimeout.new(
+      size_limit,
+      lock: FakeLock.new,
+      space_available_condition: space_available = FakeCondition.new,
+      item_available_condition: FakeCondition.new
+    )
+
+    # some pretend threads to control timing
+    producer = SyncThread.new
+    consumer = SyncThread.new
+
+    # have the item producer fill the queue to its limit with things
+    # we're going to clear
+    producer.run(ignore: [:signal]) do
+      size_limit.times do
+        q.push :you_should_never_see_any_of_me
+      end
+    end
+    # the "thread" was able to do all of its work without waiting
+    assert producer.finished?
+
+    # have the item producer try to add something to the full queue
+    producer.run(ignore: [:signal]) do
+      q.push :only_i_matter
+    end
+    # the producer is told to wait for space available
+    assert producer.interrupted_by?(space_available, :wait)
+    # it's full, right?
+    assert q.send(:full?)
+
+    # clear the full queue
+    consumer.run do
+      q.clear
+    end
+    # confirm the consumer "sends" a signal that space is available
+    assert consumer.interrupted_by?(space_available, :signal)
+    consumer.finish
+    # it's empty now, yeah?
+    assert q.send(:empty?)
+
+    # resume the producer from it's wait-for-space sleep and confirm
+    # it finished
+    assert producer.resume(ignore: [:signal]).finished?
+
+    # pop the one item that should now be on the queue
+    consumer.run(ignore: [:signal]) do
+      q.pop
+    end
+    # confirm we got the one item and not all the things cleared from the queue
+    assert_equal(:only_i_matter, consumer.last_return_value)
+    assert q.send(:empty?)
   end
 end
 
