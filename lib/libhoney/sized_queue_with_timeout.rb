@@ -85,7 +85,7 @@ module Libhoney
     def pop(timeout = :never, &timeout_policy)
       timeout_policy ||= -> { raise PopTimedOut }
 
-      wait_for_condition(@item_available, -> { @items.any? }, timeout, timeout_policy) do
+      wait_for_condition(@item_available, -> { !@items.empty? }, timeout, timeout_policy) do
         item = @items.shift
         @space_available.signal unless full?
         item
