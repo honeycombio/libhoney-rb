@@ -1,31 +1,4 @@
 module Libhoney
-  class QCondition
-    def initialize(lock)
-      @lock = lock
-      @cv   = ConditionVariable.new
-    end
-
-    def wait(timeout = nil)
-      @cv.wait(@lock.mutex, timeout)
-    end
-
-    def signal
-      @cv.signal
-    end
-  end
-
-  class QLock
-    attr_reader :mutex
-
-    def initialize
-      @mutex = Mutex.new
-    end
-
-    def synchronize(&block)
-      @mutex.synchronize(&block)
-    end
-  end
-
   ##
   # A queue implementation with optional size limit and optional timeouts on pop and push
   # operations. Heavily influenced / liberally mimicking Avdi Grimm's
@@ -165,6 +138,33 @@ module Libhoney
     # @return [Numeric]
     def trustworthy_current_time
       Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    end
+  end
+
+  class QCondition
+    def initialize(lock)
+      @lock = lock
+      @cv   = ConditionVariable.new
+    end
+
+    def wait(timeout = nil)
+      @cv.wait(@lock.mutex, timeout)
+    end
+
+    def signal
+      @cv.signal
+    end
+  end
+
+  class QLock
+    attr_reader :mutex
+
+    def initialize
+      @mutex = Mutex.new
+    end
+
+    def synchronize(&block)
+      @mutex.synchronize(&block)
     end
   end
 end
