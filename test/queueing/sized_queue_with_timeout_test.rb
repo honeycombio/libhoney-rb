@@ -4,7 +4,7 @@ require 'libhoney/queueing/sized_queue_with_timeout'
 
 class PopFromSizedQueueWithTimeoutTest < Minitest::Test
   def test_wait_for_available_item
-    q = Libhoney::SizedQueueWithTimeout.new
+    q = Libhoney::Queueing::SizedQueueWithTimeout.new
     consumer = Thread.new do
       q.pop
     end
@@ -14,7 +14,7 @@ class PopFromSizedQueueWithTimeoutTest < Minitest::Test
   end
 
   def test_popping_a_nil
-    q = Libhoney::SizedQueueWithTimeout.new
+    q = Libhoney::Queueing::SizedQueueWithTimeout.new
     consumer = Thread.new do
       q.pop
     end
@@ -24,14 +24,14 @@ class PopFromSizedQueueWithTimeoutTest < Minitest::Test
   end
 
   def test_timeout_waiting_for_item
-    q = Libhoney::SizedQueueWithTimeout.new
-    assert_raises Libhoney::SizedQueueWithTimeout::PopTimedOut do
+    q = Libhoney::Queueing::SizedQueueWithTimeout.new
+    assert_raises Libhoney::Queueing::SizedQueueWithTimeout::PopTimedOut do
       q.pop(0.001)
     end
   end
 
   def test_timeout_with_custom_timeout_policy
-    q = Libhoney::SizedQueueWithTimeout.new
+    q = Libhoney::Queueing::SizedQueueWithTimeout.new
 
     # instead of raising a timeout exception, return a default value
     result = q.pop(0.001) { :and_now_for_something_completely_different }
@@ -48,19 +48,19 @@ end
 class PushToSizedQueueWithTimeoutTest < Minitest::Test
   def test_timeout_waiting_for_space
     size_limit = 5
-    q = Libhoney::SizedQueueWithTimeout.new(size_limit)
+    q = Libhoney::Queueing::SizedQueueWithTimeout.new(size_limit)
     size_limit.times do |n|
       q.push(n)
     end
     assert q.send(:full?)
-    assert_raises Libhoney::SizedQueueWithTimeout::PushTimedOut do
+    assert_raises Libhoney::Queueing::SizedQueueWithTimeout::PushTimedOut do
       q.push(:nope, 0.001)
     end
   end
 
   def test_timeout_with_custom_timeout_policy
     size_limit = 5
-    q = Libhoney::SizedQueueWithTimeout.new(size_limit)
+    q = Libhoney::Queueing::SizedQueueWithTimeout.new(size_limit)
     size_limit.times do |n|
       q.push(n)
     end
@@ -76,7 +76,7 @@ class PushToSizedQueueWithTimeoutTest < Minitest::Test
   def test_wait_for_available_space
     size_limit = 3
 
-    q = Libhoney::SizedQueueWithTimeout.new(
+    q = Libhoney::Queueing::SizedQueueWithTimeout.new(
       size_limit,
       lock: FakeLock.new,
       space_available_condition: space_available = FakeCondition.new,
@@ -127,7 +127,7 @@ end
 class ClearASizedQueueWithTimeoutTest < Minitest::Test
   def test_clearing_a_queue
     size_limit = 5
-    q = Libhoney::SizedQueueWithTimeout.new(size_limit)
+    q = Libhoney::Queueing::SizedQueueWithTimeout.new(size_limit)
     size_limit.times do |n|
       q.push(n)
     end
@@ -139,7 +139,7 @@ class ClearASizedQueueWithTimeoutTest < Minitest::Test
   def test_clear_signals_space_is_available
     size_limit = 3
 
-    q = Libhoney::SizedQueueWithTimeout.new(
+    q = Libhoney::Queueing::SizedQueueWithTimeout.new(
       size_limit,
       lock: FakeLock.new,
       space_available_condition: space_available = FakeCondition.new,
