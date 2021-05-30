@@ -31,7 +31,7 @@ module Libhoney
         # have a ThreadError raised because we could not add to the queue.
         timeout = @block_on_send ? :never : 0
         @batch_queue.enq(event, timeout)
-      rescue Libhoney::SizedQueueWithTimeout::PushTimedOut
+      rescue Libhoney::Queueing::SizedQueueWithTimeout::PushTimedOut
         # happens if the queue was full and block_on_send = false.
         warn "#{self.class.name}: batch queue full, dropping event." if %w[debug trace].include?(ENV['LOG_LEVEL'])
       end
@@ -68,7 +68,7 @@ module Libhoney
         #   1. skips the break and is rescued
         #   2. triggers the ensure to flush the current batch
         #   3. begins the loop again with an updated next_send_time
-        rescue Libhoney::SizedQueueWithTimeout::PopTimedOut => e
+        rescue Libhoney::Queueing::SizedQueueWithTimeout::PopTimedOut => e
           warn "#{self.class.name}: ⏱ " + e.message if %w[trace].include?(ENV['LOG_LEVEL'])
 
         # any exception occurring in this loop should not take down the actual
@@ -96,7 +96,7 @@ module Libhoney
       # override super()'s @batch_queue = SizedQueue.new(); use our SizedQueueWithTimeout:
       # + block on adding events to the batch_queue when queue is full and @block_on_send is true
       # + the queue knows how to limit size and how to time-out pushes and pops
-      @batch_queue = SizedQueueWithTimeout.new(@pending_work_capacity)
+      @batch_queue = Libhoney::Queueing::SizedQueueWithTimeout.new(@pending_work_capacity)
       warn "⚠️🐆 #{self.class.name} in use! It may drop data, consume all your memory, or cause skin irritation."
     end
   end
