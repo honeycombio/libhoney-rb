@@ -1,6 +1,6 @@
 require 'test_helper'
 require 'lockstep' # supplier of SyncThread
-require 'libhoney/sized_queue_with_timeout'
+require 'libhoney/queueing/sized_queue_with_timeout'
 
 class PopFromSizedQueueWithTimeoutTest < Minitest::Test
   def test_wait_for_available_item
