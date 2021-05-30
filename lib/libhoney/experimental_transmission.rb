@@ -1,4 +1,4 @@
-require 'libhoney/sized_queue_with_timeout'
+require 'libhoney/queueing'
 require 'libhoney/transmission'
 
 module Libhoney
