@@ -1,8 +1,12 @@
+##
+# SizedQueueWithTimeout is copyright and licensed per the LICENSE.txt in
+# its containing subdirectory of this codebase.
+#
 module Libhoney
   ##
   # A queue implementation with optional size limit and optional timeouts on pop and push
   # operations. Heavily influenced / liberally mimicking Avdi Grimm's
-  # {Tapas::Queue}[https://www.rubytapas.com/2013/10/10/episode-141-bounded-queue/].
+  # {Tapas::Queue}[https://github.com/avdi/tapas-queue].
   #
   class SizedQueueWithTimeout
     class PushTimedOut < ThreadError; end
