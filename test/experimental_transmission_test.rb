@@ -64,4 +64,14 @@ class ExperimentalTransmissionClientTest < Minitest::Test
     drain = false
     transmission.close(drain) # implicit assertion that this does not raise an error and fail the test
   end
+
+  def test_user_agent_annotation_for_experiment
+    transmission = Libhoney::ExperimentalTransmissionClient.new
+
+    assert_equal "libhoney-rb/#{::Libhoney::VERSION} (exp-transmission)",
+                 transmission.__send__(:build_user_agent, nil)
+
+    assert_equal "libhoney-rb/#{::Libhoney::VERSION} (exp-transmission) awesome_sauce/42.2",
+                 transmission.__send__(:build_user_agent, 'awesome_sauce/42.2')
+  end
 end

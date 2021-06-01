@@ -99,5 +99,11 @@ module Libhoney
       @batch_queue = Libhoney::Queueing::SizedQueueWithTimeout.new(@pending_work_capacity)
       warn "⚠️🐆 #{self.class.name} in use! It may drop data, consume all your memory, or cause skin irritation."
     end
+
+    def build_user_agent(user_agent_addition)
+      ua = "libhoney-rb/#{VERSION} (exp-transmission)"
+      ua << " #{user_agent_addition}" if user_agent_addition
+      ua
+    end
   end
 end
