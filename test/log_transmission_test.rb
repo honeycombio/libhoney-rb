@@ -1,3 +1,4 @@
+require 'test_helper'
 require 'stringio'
 require 'libhoney/log_transmission'
 
