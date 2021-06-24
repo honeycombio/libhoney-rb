@@ -17,18 +17,18 @@ class HoneycombServer < Sinatra::Base
 
   post '/1/batch/:dataset' do
     case params['dataset']
-    when "err-bad-key"
-      [ 400, json({ error: "unknown API key - check your credentials"}) ]
-    when "err-too-big"
-      [ 400, json({ error: "request body is too large"}) ]
-    when "err-malformed"
-      [ 400, json({ error: "request body is malformed and cannot be read as JSON" }) ]
-    when "err-throttled"
-      [ 403, json({ error: "event dropped due to administrative throttling" }) ]
-    when "err-admin-blocklist"
-      [ 429, json({ error: "event dropped due to administrative blacklist" }) ]
-    when "err-rate-limited"
-      [ 429, json({ error: "request dropped due to rate limiting" }) ]
+    when 'err-bad-key'
+      [400, json(error: 'unknown API key - check your credentials')]
+    when 'err-too-big'
+      [400, json(error: 'request body is too large')]
+    when 'err-malformed'
+      [400, json(error: 'request body is malformed and cannot be read as JSON')]
+    when 'err-throttled'
+      [403, json(error: 'event dropped due to administrative throttling')]
+    when 'err-admin-blocklist'
+      [429, json(error: 'event dropped due to administrative blacklist')]
+    when 'err-rate-limited'
+      [429, json(error: 'request dropped due to rate limiting')]
     else
       json(@batch.map { { status: 202 } })
     end
@@ -445,10 +445,26 @@ class LibhoneyTest < Minitest::Test
     responses = @honey.responses.size.times.map { @honey.responses.pop }
     error_responses = responses.shift(error_count)
 
-    assert_equal(error_count, error_responses.length, 'We have as many responses as events we sent')
-    assert_equal(Array.new(error_count, network_error), error_responses.map(&:error), "The responses each have an exception about a network error")
-    assert_equal(Array.new(error_count) {|n| { network_error: n } }, error_responses.map(&:metadata), "Each response has metadata from its associated event")
-    assert_equal([nil], responses, 'honey.close enqueues a nil to signal response handlers to end.')
+    assert_equal(
+      error_count,
+      error_responses.length,
+      'We have as many responses as events we sent'
+    )
+    assert_equal(
+      Array.new(error_count, network_error),
+      error_responses.map(&:error),
+      'The responses each have an exception about a network error'
+    )
+    assert_equal(
+      Array.new(error_count) { |n| { network_error: n } },
+      error_responses.map(&:metadata),
+      'Each response has metadata from its associated event'
+    )
+    assert_equal(
+      [nil],
+      responses,
+      'honey.close enqueues a nil to signal response handlers to end.'
+    )
 
     # OK, the network is fixed now
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
@@ -476,7 +492,7 @@ class LibhoneyTest < Minitest::Test
     # Generate events with JSON.generate stubbed to raise an error if the event's
     # error field is true, otherwise a simple empty JSON object.
     json_error = StandardError.new('no JSON for you')
-    JSON.stub :generate, -> (e){ e[:data][:error] ? raise(json_error) : '{}' } do
+    JSON.stub :generate, ->(e) { e[:data][:error] ? raise(json_error) : '{}' } do
       event_count.times do |n|
         @honey.event.tap do |event|
           event.add_field(:error, n.odd?)
@@ -486,10 +502,19 @@ class LibhoneyTest < Minitest::Test
       end
 
       responses = event_count.times.map { @honey.responses.pop }
-      assert_equal(event_count, responses.size )
+      assert_equal(event_count, responses.size)
 
-      errors = responses.select {|r| r.error}
-      assert_equal(Array.new(event_count.div(2), json_error), errors.map(&:error), 'Expect half (rounded down) of the events to have an error')
+      errors = responses.select(&:error)
+      assert_equal(
+        event_count.div(2),
+        errors.size,
+        'Expect half (rounded down) of the number of events to have errored'
+      )
+      assert_equal(
+        Array.new(event_count.div(2), json_error),
+        errors.map(&:error),
+        'Expect half (rounded down) of the events to have an error'
+      )
     end
   end
 
@@ -516,7 +541,7 @@ class LibhoneyTest < Minitest::Test
 
     assert_equal 20, errors.length
     assert_equal (0..19).to_a, errors.map(&:metadata)
-    assert_equal Array.new(20, RuntimeError.new("request dropped due to rate limiting")), errors.map(&:error)
+    assert_equal Array.new(20, RuntimeError.new('request dropped due to rate limiting')), errors.map(&:error)
     assert_equal Array.new(20, Libhoney::Response::Status.new(429)), errors.map(&:status_code)
   end
 

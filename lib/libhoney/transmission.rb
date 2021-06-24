@@ -190,7 +190,7 @@ module Libhoney
     end
 
     def process_response(http_response, before, batch)
-      if 200 == http_response.status
+      if http_response.status == 200
         index = 0
         JSON.parse(http_response.body).each do |event|
           index += 1 while batch[index].nil? && index < batch.size
