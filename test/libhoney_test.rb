@@ -545,6 +545,57 @@ class LibhoneyTest < Minitest::Test
     assert_equal Array.new(20, Libhoney::Response::Status.new(429)), errors.map(&:status_code)
   end
 
+  def test_api_error_processing_coexists_with_json_error_processing
+    stub_request(:post, 'https://api.honeycomb.io/1/batch/err-rate-limited')
+      .to_rack(HoneycombServer)
+
+    event_count = 4
+    half_the_event_count = event_count.div(2)
+    builder = @honey.builder
+    builder.dataset = 'err-rate-limited'
+    builder.add_field('chattiness', 'high')
+
+    # Generate events with JSON.generate stubbed to raise an error if the event
+    # is flagged to fail during serialization, otherwise serialize event with empty JSON object.
+    json_error = StandardError.new('no JSON for you')
+    JSON.stub :generate, ->(e) { e[:data][:fail_to_serialize] ? raise(json_error) : '{}' } do
+      event_count.times do |n|
+        builder.event.tap do |event|
+          event.add_field(:fail_to_serialize, n.odd?)
+          event.metadata = { event_number: n, fail_to_serialize: n.odd? }
+          event.send
+        end
+      end
+
+      @honey.close
+
+      responses = []
+      while (response = @honey.responses.pop)
+        responses << response
+      end
+      assert_equal(event_count, responses.size, 'We have a response for each attempted event')
+
+      serialization_error_responses = responses.select { |r| r.metadata[:fail_to_serialize] }
+      assert_equal(
+        half_the_event_count,
+        serialization_error_responses.size,
+        'Half of the error responses are for events that failed during serialization'
+      )
+      assert_equal(
+        Array.new(half_the_event_count, json_error),
+        serialization_error_responses.map(&:error),
+        'A JSON error response was enqueued for each event flagged to fail during serialization'
+      )
+
+      remaining_responses = responses.reject { |r| r.metadata[:fail_to_serialize] }
+      assert_equal(
+        Array.new(responses.size - half_the_event_count, Libhoney::Response::Status.new(429)),
+        remaining_responses.map(&:status_code),
+        'The single error from the API was applied as the response for all serialized events sent in the batch'
+      )
+    end
+  end
+
   def test_dataset_quoting
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset%20send')
       .to_rack(HoneycombServer)
