@@ -208,6 +208,8 @@ module Libhoney
           warn "#{self.class.name}: error sending data to Honeycomb - #{http_response.status} #{error}"
         end
         batch.each do |batched_event|
+          next unless batched_event # skip nils enqueued from serialization errors
+
           enqueue_response(
             Response.new(
               status_code: http_response.status,
