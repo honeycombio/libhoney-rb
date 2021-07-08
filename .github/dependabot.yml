@@ -6,11 +6,10 @@
 version: 2
 updates:
   - package-ecosystem: "bundler" # See documentation for possible values
-    directory: "/gemfiles/" # Location of package manifests
+    directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
     labels:
       - "type: dependencies"
     reviewers:
       - "honeycombio/telemetry-team"
-
