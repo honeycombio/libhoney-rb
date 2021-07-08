@@ -36,9 +36,9 @@ module Libhoney
       @send_queue   = Queue.new
       @threads      = []
       @lock         = Mutex.new
-      # use a SizedQueue so the producer will block on adding to the batch_queue when @block_on_send is true
-      @batch_queue  = SizedQueue.new(@pending_work_capacity)
       @batch_thread = nil
+
+      setup_batch_queue
     end
 
     def add(event)
@@ -51,26 +51,6 @@ module Libhoney
       end
 
       ensure_threads_running
-    end
-
-    def event_valid(event)
-      invalid = []
-      invalid.push('api host') if event.api_host.nil? || event.api_host.empty?
-      invalid.push('write key') if event.writekey.nil? || event.writekey.empty?
-      invalid.push('dataset') if event.dataset.nil? || event.dataset.empty?
-
-      unless invalid.empty?
-        e = StandardError.new("#{self.class.name}: nil or empty required fields (#{invalid.join(', ')})"\
-          '. Will not attempt to send.')
-        Response.new(error: e).tap do |error_response|
-          error_response.metadata = event.metadata
-          enqueue_response(error_response)
-        end
-
-        return false
-      end
-
-      true
     end
 
     def send_loop
@@ -133,23 +113,31 @@ module Libhoney
     end
 
     def close(drain)
-      # if drain is false, clear the remaining unprocessed events from the queue
-      unless drain
-        @batch_queue.clear
-        @send_queue.clear
+      @lock.synchronize do
+        # if drain is false, clear the remaining unprocessed events from the queue
+        if drain
+          warn "#{self.class.name} - close: draining events" if %w[debug trace].include?(ENV['LOG_LEVEL'])
+        else
+          warn "#{self.class.name} - close: deleting unsent events" if %w[debug trace].include?(ENV['LOG_LEVEL'])
+          @batch_queue.clear
+          @send_queue.clear
+        end
+
+        @batch_queue.enq(nil)
+        if @batch_thread.nil?
+        else
+          @batch_thread.join(1.0) # limit the amount of time we'll wait for the thread to end
+        end
+
+        # send @threads.length number of nils so each thread will fall out of send_loop
+        @threads.length.times { @send_queue << nil }
+
+        @threads.each(&:join)
+        @threads = []
       end
 
-      @batch_queue.enq(nil)
-      @batch_thread.join unless @batch_thread.nil?
-
-      # send @threads.length number of nils so each thread will fall out of send_loop
-      @threads.length.times { @send_queue << nil }
-
-      @threads.each(&:join)
-      @threads = []
-
       enqueue_response(nil)
-
+      warn "#{self.class.name} - close: close complete" if %w[debug trace].include?(ENV['LOG_LEVEL'])
       0
     end
 
@@ -161,24 +149,75 @@ module Libhoney
 
       loop do
         begin
+          # a timeout expiration waiting for an event
+          #   1. interrupts only when thread is in a blocking state (waiting for pop)
+          #   2. exception skips the break and is rescued
+          #   3. triggers the ensure to flush the current batch
+          #   3. begins the loop again with an updated next_send_time
           Thread.handle_interrupt(Timeout::Error => :on_blocking) do
+            # an event on the batch_queue
+            #   1. pops out and is truthy
+            #   2. gets included in the current batch
+            #   3. while waits for another event
             while (event = Timeout.timeout(@send_frequency) { @batch_queue.pop })
               key = [event.api_host, event.writekey, event.dataset]
               batched_events[key] << event
             end
           end
 
+          # a nil on the batch_queue
+          #   1. pops out and is falsy
+          #   2. ends the event-popping while do..end
+          #   3. breaks the loop
+          #   4. flushes the current batch
+          #   5. ends the batch_loop
           break
-        rescue Exception
+        rescue Exception => e
+          warn "#{self.class.name}: 💥 " + e.message if %w[debug trace].include?(ENV['LOG_LEVEL'])
+          warn e.backtrace.join("\n").to_s if ['trace'].include?(ENV['LOG_LEVEL'])
+
+        # regardless of the exception, figure out whether enough time has passed to
+        # send the current batched events, if so, send them and figure out the next send time
+        # before going back to the top of the loop
         ensure
           next_send_time = flush_batched_events(batched_events) if Time.now > next_send_time
         end
       end
 
+      # don't need to capture the next_send_time here because the batch_loop is exiting
+      # for some reason (probably transmission.close)
       flush_batched_events(batched_events)
     end
 
     private
+
+    def setup_batch_queue
+      # use a SizedQueue so the producer will block on adding to the batch_queue when @block_on_send is true
+      @batch_queue = SizedQueue.new(@pending_work_capacity)
+    end
+
+    REQUIRED_EVENT_FIELDS = %i[api_host writekey dataset].freeze
+
+    def event_valid(event)
+      missing_required_fields = REQUIRED_EVENT_FIELDS.select do |required_field|
+        event.public_send(required_field).nil? || event.public_send(required_field).empty?
+      end
+
+      if missing_required_fields.empty?
+        true
+      else
+        enqueue_response(
+          Response.new(
+            metadata: event.metadata,
+            error: StandardError.new(
+              "#{self.class.name}: nil or empty required fields (#{missing_required_fields.join(', ')})"\
+              '. Will not attempt to send.'
+            )
+          )
+        )
+        false
+      end
+    end
 
     ##
     # Enqueues a response to the responses queue suppressing ThreadError when

@@ -20,7 +20,7 @@ class TransmissionClientTest < Minitest::Test
     e = response_queue.pop
     refute_nil(e)
     refute_nil(e.error)
-    assert_equal('Libhoney::TransmissionClient: nil or empty required fields (api host, write key, dataset).'\
+    assert_equal('Libhoney::TransmissionClient: nil or empty required fields (api_host, writekey, dataset).'\
       ' Will not attempt to send.', e.error.message)
   end
 
@@ -42,7 +42,7 @@ class TransmissionClientTest < Minitest::Test
     e = response_queue.pop
     refute_nil(e)
     refute_nil(e.error)
-    assert_equal('Libhoney::TransmissionClient: nil or empty required fields (api host, write key, dataset).'\
+    assert_equal('Libhoney::TransmissionClient: nil or empty required fields (api_host, writekey, dataset).'\
       ' Will not attempt to send.', e.error.message)
   end
 
