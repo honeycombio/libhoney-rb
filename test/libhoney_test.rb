@@ -16,7 +16,22 @@ class HoneycombServer < Sinatra::Base
   end
 
   post '/1/batch/:dataset' do
-    json(@batch.map { { status: 202 } })
+    case params['dataset']
+    when 'err-bad-key'
+      [400, json(error: 'unknown API key - check your credentials')]
+    when 'err-too-big'
+      [400, json(error: 'request body is too large')]
+    when 'err-malformed'
+      [400, json(error: 'request body is malformed and cannot be read as JSON')]
+    when 'err-throttled'
+      [403, json(error: 'event dropped due to administrative throttling')]
+    when 'err-admin-blocklist'
+      [429, json(error: 'event dropped due to administrative blacklist')]
+    when 'err-rate-limited'
+      [429, json(error: 'request dropped due to rate limiting')]
+    else
+      json(@batch.map { { status: 202 } })
+    end
   end
 end
 
@@ -292,7 +307,7 @@ class LibhoneyTest < Minitest::Test
 
     # ensure that the thread above is waiting for
     # an event to be pushed onto the queue
-    sleep 0.1 while t.status != 'sleep'
+    test_waits_for { t.status == 'sleep' }
 
     (1..times_to_test).each do |i|
       event = @honey.event
@@ -411,34 +426,59 @@ class LibhoneyTest < Minitest::Test
   end
 
   def test_error_handling
+    # simulate network errors between client and Honeycomb API
+    network_error = StandardError.new('the network is dark and full of errors')
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
-      .to_raise('the network is dark and full of errors')
+      .to_raise(network_error)
 
     error_count = 20
 
-    error_count.times do
+    error_count.times do |n|
       event = @honey.event
       event.add_field 'hi', 'bye'
+      event.metadata = { network_error: n }
       event.send
     end
 
     @honey.close
 
-    while (response = @honey.responses.pop)
-      error_count -= 1
-      assert_kind_of(Exception, response.error)
-      assert_equal(0, response.status_code)
-    end
+    responses = @honey.responses.size.times.map { @honey.responses.pop }
+    error_responses = responses.shift(error_count)
 
-    assert_equal(0, error_count)
+    assert_equal(
+      error_count,
+      error_responses.length,
+      'We have as many responses as events we sent'
+    )
+    assert_equal(
+      Array.new(error_count, network_error),
+      error_responses.map(&:error),
+      'The responses each have an exception about a network error'
+    )
+    assert_equal(
+      Array.new(error_count) { |n| { network_error: n } },
+      error_responses.map(&:metadata),
+      'Each response has metadata from its associated event'
+    )
+    assert_equal(
+      [nil],
+      responses,
+      'honey.close enqueues a nil to signal response handlers to end.'
+    )
 
+    # OK, the network is fixed now
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
       .to_rack(HoneycombServer)
 
-    @honey.send_now('argle' => 'bargle')
+    @honey.event.tap do |e|
+      e.add_field('argle', 'bargle')
+      e.metadata = { it_worked: true }
+      e.send
+    end
 
     response = @honey.responses.pop
     assert_equal(202, response.status_code)
+    assert_equal({ it_worked: true }, response.metadata)
 
     @honey.close
   end
@@ -447,33 +487,112 @@ class LibhoneyTest < Minitest::Test
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
       .to_rack(HoneycombServer)
 
-    # simlulate an error generating json for an event
-    json_generate = proc do |o|
-      o[:data][:error] && raise(StandardError, 'no JSON for you')
+    event_count = 5
 
-      '{}'
+    # Generate events with JSON.generate stubbed to raise an error if the event's
+    # error field is true, otherwise a simple empty JSON object.
+    json_error = StandardError.new('no JSON for you')
+    JSON.stub :generate, ->(e) { e[:data][:error] ? raise(json_error) : '{}' } do
+      event_count.times do |n|
+        @honey.event.tap do |event|
+          event.add_field(:error, n.odd?)
+          event.metadata = n
+          event.send
+        end
+      end
+
+      responses = event_count.times.map { @honey.responses.pop }
+      assert_equal(event_count, responses.size)
+
+      errors = responses.select(&:error)
+      assert_equal(
+        event_count.div(2),
+        errors.size,
+        'Expect half (rounded down) of the number of events to have errored'
+      )
+      assert_equal(
+        Array.new(event_count.div(2), json_error),
+        errors.map(&:error),
+        'Expect half (rounded down) of the events to have an error'
+      )
+    end
+  end
+
+  def test_error_response_handling
+    stub_request(:post, 'https://api.honeycomb.io/1/batch/err-rate-limited')
+      .to_rack(HoneycombServer)
+
+    builder = @honey.builder
+    builder.dataset = 'err-rate-limited'
+    builder.add_field('chattiness', 'high')
+
+    20.times do |n|
+      event = builder.event
+      event.metadata = n
+      event.send
     end
 
-    JSON.stub :generate, json_generate do
-      @honey.event.tap do |event|
-        event.add_field(:error, true)
-        event.metadata = 1
-        event.send
-      end
-      @honey.event.tap do |event|
-        event.add_field(:error, false)
-        event.metadata = 2
-        event.send
+    @honey.close
+
+    errors = []
+    while (response = @honey.responses.pop)
+      errors << response
+    end
+
+    assert_equal 20, errors.length
+    assert_equal (0..19).to_a, errors.map(&:metadata)
+    assert_equal Array.new(20, RuntimeError.new('request dropped due to rate limiting')), errors.map(&:error)
+    assert_equal Array.new(20, Libhoney::Response::Status.new(429)), errors.map(&:status_code)
+  end
+
+  def test_api_error_processing_coexists_with_json_error_processing
+    stub_request(:post, 'https://api.honeycomb.io/1/batch/err-rate-limited')
+      .to_rack(HoneycombServer)
+
+    event_count = 4
+    half_the_event_count = event_count.div(2)
+    builder = @honey.builder
+    builder.dataset = 'err-rate-limited'
+    builder.add_field('chattiness', 'high')
+
+    # Generate events with JSON.generate stubbed to raise an error if the event
+    # is flagged to fail during serialization, otherwise serialize event with empty JSON object.
+    json_error = StandardError.new('no JSON for you')
+    JSON.stub :generate, ->(e) { e[:data][:fail_to_serialize] ? raise(json_error) : '{}' } do
+      event_count.times do |n|
+        builder.event.tap do |event|
+          event.add_field(:fail_to_serialize, n.odd?)
+          event.metadata = { event_number: n, fail_to_serialize: n.odd? }
+          event.send
+        end
       end
 
-      response = @honey.responses.pop
-      assert_equal(1, response.metadata)
-      assert_kind_of(Exception, response.error)
-      assert_equal(0, response.status_code)
+      @honey.close
 
-      response = @honey.responses.pop
-      assert_equal(2, response.metadata)
-      assert_equal(202, response.status_code)
+      responses = []
+      while (response = @honey.responses.pop)
+        responses << response
+      end
+      assert_equal(event_count, responses.size, 'We have a response for each attempted event')
+
+      serialization_error_responses = responses.select { |r| r.metadata[:fail_to_serialize] }
+      assert_equal(
+        half_the_event_count,
+        serialization_error_responses.size,
+        'Half of the error responses are for events that failed during serialization'
+      )
+      assert_equal(
+        Array.new(half_the_event_count, json_error),
+        serialization_error_responses.map(&:error),
+        'A JSON error response was enqueued for each event flagged to fail during serialization'
+      )
+
+      remaining_responses = responses.reject { |r| r.metadata[:fail_to_serialize] }
+      assert_equal(
+        Array.new(responses.size - half_the_event_count, Libhoney::Response::Status.new(429)),
+        remaining_responses.map(&:status_code),
+        'The single error from the API was applied as the response for all serialized events sent in the batch'
+      )
     end
   end
 
@@ -531,6 +650,8 @@ class LibhoneyResponseBlaster < Minitest::Test
       max_concurrent_batches: 1,
       send_frequency: 1
     )
+    stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset-send')
+      .to_rack(HoneycombServer)
   end
 
   ##
@@ -553,7 +674,7 @@ class LibhoneyResponseBlaster < Minitest::Test
       event = @honey.event
       event.dataset = 'mydataset-send'
       event.add('test' => i)
-      sleep 1
+      sleep 0.1
       event.send
     end
     @honey.close
@@ -571,7 +692,7 @@ class LibhoneyResponseBlaster < Minitest::Test
       event = @honey.event
       event.dataset = 'mydataset-send'
       event.add('test' => i)
-      sleep 1
+      sleep 0.1
       event.send
     end
 
