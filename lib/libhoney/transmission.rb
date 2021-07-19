@@ -196,11 +196,13 @@ module Libhoney
           index += 1 while batch[index].nil? && index < batch.size
           break unless (batched_event = batch[index])
 
-          Response.new(status_code: event['status']).tap do |response|
-            response.duration = Time.now - before
-            response.metadata = batched_event.metadata
-            enqueue_response(response)
-          end
+          enqueue_response(
+            Response.new(
+              status_code: event['status'],
+              duration: (Time.now - before),
+              metadata: batched_event.metadata
+            )
+          )
         end
       else
         error = JSON.parse(http_response.body)['error']
@@ -212,7 +214,7 @@ module Libhoney
 
           enqueue_response(
             Response.new(
-              status_code: http_response.status,
+              status_code: http_response.status, # single error from API applied to all events sent in batch
               duration: (Time.now - before),
               metadata: batched_event.metadata,
               error: RuntimeError.new(error)
