@@ -583,6 +583,128 @@ class LibhoneyTest < Minitest::Test
   end
 end
 
+class LibhoneyTransmissionConfigTest < Minitest::Test
+  def setup
+    # intercept warning emitted for missing writekey
+    @old_stderr = $stderr
+    $stderr = StringIO.new
+  end
+
+  def teardown
+    $stderr = @old_stderr
+  end
+
+  def test_no_config_given
+    honey = Libhoney::Client.new
+    assert_instance_of(
+      Libhoney::NullTransmissionClient,
+      honey.instance_variable_get(:@transmission),
+      'without a key or dataset provided, the client should use the null/no-op transmission'
+    )
+  end
+
+  def test_api_config_given
+    honey = Libhoney::Client.new(writekey: 'writekey', dataset: 'dataset')
+    assert_instance_of(
+      Libhoney::TransmissionClient,
+      honey.instance_variable_get(:@transmission),
+      'with a key and dataset provided, the client should use the standard transmission'
+    )
+  end
+
+  def test_parameters_passed_to_transmission
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      user_agent_addition: 'test user agent',
+      block_on_send: :test_block_on_send,
+      block_on_responses: :test_block_on_responses,
+      max_batch_size: 49,
+      send_frequency: 99,
+      max_concurrent_batches: 9,
+      pending_work_capacity: 999,
+      proxy_config: 'http://not.a.real.proxy'
+    )
+    test_transmission = honey.instance_variable_get(:@transmission)
+    assert_instance_of Libhoney::TransmissionClient, test_transmission
+
+    assert_match 'test user agent', test_transmission.instance_variable_get(:@user_agent)
+    assert_equal :test_block_on_send, test_transmission.instance_variable_get(:@block_on_send)
+    assert_equal :test_block_on_responses, test_transmission.instance_variable_get(:@block_on_responses)
+    assert_equal 49, test_transmission.instance_variable_get(:@max_batch_size)
+    assert_equal 0.099, test_transmission.instance_variable_get(:@send_frequency)
+    assert_equal 9, test_transmission.instance_variable_get(:@max_concurrent_batches)
+    assert_equal 999, test_transmission.instance_variable_get(:@pending_work_capacity)
+    assert_equal 'http://not.a.real.proxy', test_transmission.instance_variable_get(:@proxy_config).to_s
+  end
+
+  def test_set_by_class
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      transmission: Libhoney::ExperimentalTransmissionClient
+    )
+    assert_instance_of(
+      Libhoney::ExperimentalTransmissionClient,
+      honey.instance_variable_get(:@transmission),
+      'when given a class for transmission, client should attempt to initialize that class'
+    )
+  end
+
+  def test_set_to_configured_transmission_instance
+    customized_transmission = Libhoney::TransmissionClient.new(user_agent_addition: 'custom')
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      transmission: customized_transmission
+    )
+    assert_equal(
+      customized_transmission,
+      honey.instance_variable_get(:@transmission)
+    )
+  end
+
+  def test_set_to_a_mocktransmission
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      transmission: Libhoney::MockTransmissionClient
+    )
+    assert_instance_of(
+      Libhoney::MockTransmissionClient,
+      honey.instance_variable_get(:@transmission)
+    )
+
+    mock_transmission = Libhoney::MockTransmissionClient.new
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      transmission: mock_transmission
+    )
+    assert_equal(
+      mock_transmission,
+      honey.instance_variable_get(:@transmission)
+    )
+  end
+
+  class NotATransmission
+    def initialize(**_); end
+  end
+
+  def test_set_by_a_bad_class
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      transmission: NotATransmission
+    )
+    assert_instance_of(
+      Libhoney::NullTransmissionClient,
+      honey.instance_variable_get(:@transmission),
+      'when given a class that does not behave like a transmission, client should use the no-op transmission'
+    )
+  end
+end
+
 class LibhoneyUserAgentTest < Minitest::Test
   def setup
     stub_request(:post, 'https://api.honeycomb.io/1/batch/somedataset')

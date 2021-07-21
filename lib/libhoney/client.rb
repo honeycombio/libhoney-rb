@@ -46,7 +46,11 @@ module Libhoney
     #   Honeycomb query engine will interpret it as representative of 10 events)
     # @param api_host [String] defaults to +API_HOST+, override to change the
     #   destination for these Honeycomb events.
-    # @param transmission [Object] transport used to actually send events. If nil (the default), will be lazily initialized with a {TransmissionClient} on first event send.
+    # @param transmission [Class, Object, nil] transport used to actually send events. If nil (the default),
+    #   will be initialized with a {TransmissionClient}. If Class--for example, {MockTransmissionClient}--will attempt
+    #   to create a new instance of that class with {TransmissionClient}'s usual parameters. If Object, checks
+    #   that the instance passed in implements the Transmission interface (responds to :add and :close). If the
+    #   check does not succeed, a no-op NullTransmission will be used instead.
     # @param block_on_send [Boolean] if more than pending_work_capacity events are written, block sending further events
     # @param block_on_responses [Boolean] if true, block if there is no thread reading from the response queue
     # @param pending_work_capacity [Fixnum] defaults to 1000. If the queue of
@@ -88,17 +92,6 @@ module Libhoney
       @builder.sample_rate = sample_rate
       @builder.api_host    = api_host
 
-      @transmission = transmission
-      if !@transmission && !(writekey && dataset)
-        # if no writekey or dataset are configured, and we didn't override the
-        # transmission (e.g. to a MockTransmissionClient), that's almost
-        # certainly a misconfiguration, even though it's possible to override
-        # them on a per-event basis. So let's handle the misconfiguration
-        # early rather than potentially throwing thousands of exceptions at runtime.
-        warn "#{self.class.name}: no #{writekey ? 'dataset' : 'writekey'} configured, disabling sending events"
-        @transmission = NullTransmissionClient.new
-      end
-
       @user_agent_addition = user_agent_addition
 
       @block_on_send          = block_on_send
@@ -108,8 +101,8 @@ module Libhoney
       @max_concurrent_batches = max_concurrent_batches
       @pending_work_capacity  = pending_work_capacity
       @responses              = SizedQueue.new(2 * @pending_work_capacity)
-      @lock                   = Mutex.new
       @proxy_config           = parse_proxy_config(proxy_config)
+      @transmission           = setup_transmission(transmission, writekey, dataset)
     end
 
     attr_reader :block_on_send, :block_on_responses, :max_batch_size,
@@ -197,43 +190,7 @@ module Libhoney
     # @param event [Event] the event to send to honeycomb
     # @api private
     def send_event(event)
-      @lock.synchronize do
-        @transmission ||= TransmissionClient.new(**transmission_client_params)
-      end
-
       @transmission.add(event)
-    end
-
-    ##
-    # Parameters to pass to a transmission based on client config.
-    #
-    # @api private
-    def transmission_client_params
-      {
-        max_batch_size: @max_batch_size,
-        send_frequency: @send_frequency,
-        max_concurrent_batches: @max_concurrent_batches,
-        pending_work_capacity: @pending_work_capacity,
-        responses: @responses,
-        block_on_send: @block_on_send,
-        block_on_responses: @block_on_responses,
-        user_agent_addition: @user_agent_addition,
-        proxy_config: @proxy_config
-      }
-    end
-
-    ##
-    # swap out the current transmission for a different one
-    #
-    # The transmission passed in must have been fully configured; no defaults from the
-    # Libhoney client will be applied.
-    #
-    # @param transmission [Transmission] a fully configured instance of a type of transmission
-    # @api private
-    def change_transmission(transmission_instance)
-      @lock.synchronize do
-        @transmission = transmission_instance
-      end
     end
 
     # @api private
@@ -253,6 +210,57 @@ module Libhoney
     end
 
     private
+
+    ##
+    # Parameters to pass to a transmission based on client config.
+    #
+    def transmission_client_params
+      {
+        max_batch_size: @max_batch_size,
+        send_frequency: @send_frequency,
+        max_concurrent_batches: @max_concurrent_batches,
+        pending_work_capacity: @pending_work_capacity,
+        responses: @responses,
+        block_on_send: @block_on_send,
+        block_on_responses: @block_on_responses,
+        user_agent_addition: @user_agent_addition,
+        proxy_config: @proxy_config
+      }
+    end
+
+    def setup_transmission(transmission, writekey, dataset)
+      # if a provided transmission can add and close, we'll assume the user
+      # has provided a working transmission with a customized configuration
+      return transmission if quacks_like_a_transmission?(transmission)
+
+      if !(writekey && dataset) # rubocop:disable Style/NegatedIf
+        # if no writekey or dataset are configured, and we didn't override the
+        # transmission (e.g. to a MockTransmissionClient), that's almost
+        # certainly a misconfiguration, even though it's possible to override
+        # them on a per-event basis. So let's handle the misconfiguration
+        # early rather than potentially throwing thousands of exceptions at runtime.
+        warn "#{self.class.name}: no #{writekey ? 'dataset' : 'writekey'} configured, disabling sending events"
+        return NullTransmissionClient.new
+      end
+
+      case transmission
+      when NilClass # the default value for new clients
+        return TransmissionClient.new(**transmission_client_params)
+      when Class
+        # if a class has been provided, attempt to instantiate it with parameters given to the client
+        t = transmission.new(**transmission_client_params)
+        if quacks_like_a_transmission?(t) # rubocop:disable Style/GuardClause
+          return t
+        else
+          warn "#{t.class.name}: does not appear to behave like a transmission, disabling sending events"
+          return NullTransmissionClient.new
+        end
+      end
+    end
+
+    def quacks_like_a_transmission?(transmission)
+      transmission.respond_to?(:add) && transmission.respond_to?(:close)
+    end
 
     # @api private
     def parse_proxy_config(config)

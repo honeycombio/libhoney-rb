@@ -8,16 +8,16 @@ module Libhoney
   # a timeout internally.
   #
   # @example Use this transmission with the Ruby Beeline
+  #   require 'libhoney/experimental_transmission'
+  #
   #   Honeycomb.configure do |config|
-  #     config.write_key = ENV["HONEYCOMB_WRITE_KEY"]
-  #     config.dataset = ENV.fetch("HONEYCOMB_DATASET", "awesome_sauce")
+  #     config.client = Libhoney::Client.new(
+  #       writekey: ENV["HONEYCOMB_WRITE_KEY"],
+  #       dataset: ENV.fetch("HONEYCOMB_DATASET", "awesome_sauce"),
+  #       transmission: Libhoney::ExperimentalTransmissionClient
+  #     )
   #     ...
   #   end
-  #
-  #   hnyclient = Honeycomb.libhoney
-  #   hnyclient.change_transmission(
-  #     Libhoney::ExperimentalTransmissionClient.new(**hnyclient.transmission_client_params)
-  #   )
   #
   # @api private
   #

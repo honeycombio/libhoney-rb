@@ -10,9 +10,12 @@ require 'spy'
 
 class ExperimentalLibhoneyTest < Minitest::Test
   def setup
-    @honey = Libhoney::Client.new(writekey: 'mywritekey', dataset: 'mydataset', send_frequency: 1)
-    @xp_transmission = Libhoney::ExperimentalTransmissionClient.new(**@honey.transmission_client_params)
-    @honey.change_transmission(@xp_transmission)
+    @honey = Libhoney::Client.new(
+      writekey: 'mywritekey',
+      dataset: 'mydataset',
+      send_frequency: 1,
+      transmission: Libhoney::ExperimentalTransmissionClient
+    )
   end
 
   def test_event
@@ -253,9 +256,9 @@ class ExperimentalLibhoneyResponseBlaster < Minitest::Test
       pending_work_capacity: 1,
       max_batch_size: 1,
       max_concurrent_batches: 1,
-      send_frequency: 1
+      send_frequency: 1,
+      transmission: Libhoney::ExperimentalTransmissionClient
     )
-    @honey.change_transmission(Libhoney::ExperimentalTransmissionClient.new(**@honey.transmission_client_params))
   end
 
   ##

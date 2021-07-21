@@ -7,7 +7,7 @@ module Libhoney
   #       verify what events your instrumented code is sending. Use in
   #       production is not recommended.
   class MockTransmissionClient
-    def initialize
+    def initialize(**_)
       reset
     end
 
