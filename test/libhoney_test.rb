@@ -4,36 +4,8 @@ require 'stringio'
 require 'minitest/mock'
 require 'libhoney'
 require 'webmock/minitest'
-require 'sinatra/base'
-require 'sinatra/json'
+require 'stub_honeycomb_server'
 require 'spy'
-
-class HoneycombServer < Sinatra::Base
-  set :json_encoder, :to_json
-
-  before do
-    @batch = JSON.parse(request.body.read.to_s)
-  end
-
-  post '/1/batch/:dataset' do
-    case params['dataset']
-    when 'err-bad-key'
-      [400, json(error: 'unknown API key - check your credentials')]
-    when 'err-too-big'
-      [400, json(error: 'request body is too large')]
-    when 'err-malformed'
-      [400, json(error: 'request body is malformed and cannot be read as JSON')]
-    when 'err-throttled'
-      [403, json(error: 'event dropped due to administrative throttling')]
-    when 'err-admin-blocklist'
-      [429, json(error: 'event dropped due to administrative blacklist')]
-    when 'err-rate-limited'
-      [429, json(error: 'request dropped due to rate limiting')]
-    else
-      json(@batch.map { { status: 202 } })
-    end
-  end
-end
 
 class LibhoneyDefaultTest < Minitest::Test
   def setup
@@ -86,7 +58,7 @@ class LibhoneyProxyTest < Minitest::Test
   def test_send_now_with_proxy
     stub_request(:post, 'http://example.com/1/batch/dataset')
       .with(headers: { 'Proxy-Authorization' => /^Basic / })
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     honey = Libhoney::Client.new(writekey: 'writekey',
                                  dataset: 'dataset',
@@ -228,7 +200,7 @@ class LibhoneyBuilderTest < Minitest::Test
 
   def test_send_now
     stub_request(:post, 'http://example.com/1/batch/dataset')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     builder = @honey.builder
     builder.send_now('argle' => 'bargle')
@@ -288,7 +260,7 @@ class LibhoneyTest < Minitest::Test
     events = 0
 
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset-send')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     event = @honey.event
     event.dataset = 'mydataset-send'
@@ -325,7 +297,7 @@ class LibhoneyTest < Minitest::Test
 
   def test_send_now
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     @honey.send_now('argle' => 'bargle')
 
@@ -336,7 +308,7 @@ class LibhoneyTest < Minitest::Test
 
   def test_handle_interrupt
     stub_request(:post, 'https://api.honeycomb.io/1/batch/interrupt')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     Thread.handle_interrupt(Timeout::Error => :never) do
       (1..10).each do |i|
@@ -356,7 +328,7 @@ class LibhoneyTest < Minitest::Test
     times_to_test = 900
 
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset-close')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     (1..times_to_test).each do |i|
       event = @honey.event
@@ -371,7 +343,7 @@ class LibhoneyTest < Minitest::Test
 
   def test_response_metadata
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset-response_metadata')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     builder = @honey.builder
     builder.dataset = 'mydataset-response_metadata'
@@ -468,7 +440,7 @@ class LibhoneyTest < Minitest::Test
 
     # OK, the network is fixed now
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     @honey.event.tap do |e|
       e.add_field('argle', 'bargle')
@@ -485,7 +457,7 @@ class LibhoneyTest < Minitest::Test
 
   def test_json_error_handling
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     event_count = 5
 
@@ -520,7 +492,7 @@ class LibhoneyTest < Minitest::Test
 
   def test_error_response_handling
     stub_request(:post, 'https://api.honeycomb.io/1/batch/err-rate-limited')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     builder = @honey.builder
     builder.dataset = 'err-rate-limited'
@@ -547,7 +519,7 @@ class LibhoneyTest < Minitest::Test
 
   def test_api_error_processing_coexists_with_json_error_processing
     stub_request(:post, 'https://api.honeycomb.io/1/batch/err-rate-limited')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     event_count = 4
     half_the_event_count = event_count.div(2)
@@ -598,7 +570,7 @@ class LibhoneyTest < Minitest::Test
 
   def test_dataset_quoting
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset%20send')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
 
     event = @honey.event
     event.dataset = 'mydataset send'
@@ -611,10 +583,132 @@ class LibhoneyTest < Minitest::Test
   end
 end
 
+class LibhoneyTransmissionConfigTest < Minitest::Test
+  def setup
+    # intercept warning emitted for missing writekey
+    @old_stderr = $stderr
+    $stderr = StringIO.new
+  end
+
+  def teardown
+    $stderr = @old_stderr
+  end
+
+  def test_no_config_given
+    honey = Libhoney::Client.new
+    assert_instance_of(
+      Libhoney::NullTransmissionClient,
+      honey.instance_variable_get(:@transmission),
+      'without a key or dataset provided, the client should use the null/no-op transmission'
+    )
+  end
+
+  def test_api_config_given
+    honey = Libhoney::Client.new(writekey: 'writekey', dataset: 'dataset')
+    assert_instance_of(
+      Libhoney::TransmissionClient,
+      honey.instance_variable_get(:@transmission),
+      'with a key and dataset provided, the client should use the standard transmission'
+    )
+  end
+
+  def test_parameters_passed_to_transmission
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      user_agent_addition: 'test user agent',
+      block_on_send: :test_block_on_send,
+      block_on_responses: :test_block_on_responses,
+      max_batch_size: 49,
+      send_frequency: 99,
+      max_concurrent_batches: 9,
+      pending_work_capacity: 999,
+      proxy_config: 'http://not.a.real.proxy'
+    )
+    test_transmission = honey.instance_variable_get(:@transmission)
+    assert_instance_of Libhoney::TransmissionClient, test_transmission
+
+    assert_match 'test user agent', test_transmission.instance_variable_get(:@user_agent)
+    assert_equal :test_block_on_send, test_transmission.instance_variable_get(:@block_on_send)
+    assert_equal :test_block_on_responses, test_transmission.instance_variable_get(:@block_on_responses)
+    assert_equal 49, test_transmission.instance_variable_get(:@max_batch_size)
+    assert_equal 0.099, test_transmission.instance_variable_get(:@send_frequency)
+    assert_equal 9, test_transmission.instance_variable_get(:@max_concurrent_batches)
+    assert_equal 999, test_transmission.instance_variable_get(:@pending_work_capacity)
+    assert_equal 'http://not.a.real.proxy', test_transmission.instance_variable_get(:@proxy_config).to_s
+  end
+
+  def test_set_by_class
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      transmission: Libhoney::ExperimentalTransmissionClient
+    )
+    assert_instance_of(
+      Libhoney::ExperimentalTransmissionClient,
+      honey.instance_variable_get(:@transmission),
+      'when given a class for transmission, client should attempt to initialize that class'
+    )
+  end
+
+  def test_set_to_configured_transmission_instance
+    customized_transmission = Libhoney::TransmissionClient.new(user_agent_addition: 'custom')
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      transmission: customized_transmission
+    )
+    assert_equal(
+      customized_transmission,
+      honey.instance_variable_get(:@transmission)
+    )
+  end
+
+  def test_set_to_a_mocktransmission
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      transmission: Libhoney::MockTransmissionClient
+    )
+    assert_instance_of(
+      Libhoney::MockTransmissionClient,
+      honey.instance_variable_get(:@transmission)
+    )
+
+    mock_transmission = Libhoney::MockTransmissionClient.new
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      transmission: mock_transmission
+    )
+    assert_equal(
+      mock_transmission,
+      honey.instance_variable_get(:@transmission)
+    )
+  end
+
+  class NotATransmission
+    def initialize(**_); end
+  end
+
+  def test_set_by_a_bad_class
+    honey = Libhoney::Client.new(
+      writekey: 'writekey',
+      dataset: 'dataset',
+      transmission: NotATransmission
+    )
+    assert_instance_of(
+      Libhoney::NullTransmissionClient,
+      honey.instance_variable_get(:@transmission),
+      'when given a class that does not behave like a transmission, client should use the no-op transmission'
+    )
+  end
+end
+
 class LibhoneyUserAgentTest < Minitest::Test
   def setup
     stub_request(:post, 'https://api.honeycomb.io/1/batch/somedataset')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
   end
 
   def test_default_user_agent
@@ -651,7 +745,7 @@ class LibhoneyResponseBlaster < Minitest::Test
       send_frequency: 1
     )
     stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset-send')
-      .to_rack(HoneycombServer)
+      .to_rack(StubHoneycombServer)
   end
 
   ##
