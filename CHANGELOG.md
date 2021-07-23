@@ -2,6 +2,17 @@
 
 ## changes pending release
 
+## 1.19.0
+
+### Improvements
+
+- add a test_helper, Minitest reporters, & store test results in CI (#88)
+- add experimental transmission with new sized-and-timed queue (#87)
+
+### Fixes
+
+- Process single-error responses from the Batch API (#89)
+
 ## 1.18.0
 
 ### Improvements
