@@ -172,6 +172,9 @@ module Libhoney
           #   4. flushes the current batch
           #   5. ends the batch_loop
           break
+        rescue Timeout::Error
+          # Timeout::Error happens when there is nothing to pop from the batch_queue.
+          # We rescue it here to avoid spamming the logs with "execution expired" errors.
         rescue Exception => e
           warn "#{self.class.name}: 💥 " + e.message if %w[debug trace].include?(ENV['LOG_LEVEL'])
           warn e.backtrace.join("\n").to_s if ['trace'].include?(ENV['LOG_LEVEL'])
