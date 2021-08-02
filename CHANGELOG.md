@@ -1,6 +1,10 @@
 # libhoney-rb changelog
 
-## changes pending release
+## 1.20.0
+
+### Fixes
+
+- Handle Timeout::Error in TransmissionClient (#95) | [Adam Pohorecki](https://github.com/psyho)
 
 ## 1.19.0
 
