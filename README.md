@@ -1,4 +1,8 @@
-# libhoney [![CircleCI Build Status](https://circleci.com/gh/honeycombio/libhoney-rb.svg?style=svg)](https://circleci.com/gh/honeycombio/libhoney-rb) [![Gem Version](https://badge.fury.io/rb/libhoney.svg)](https://badge.fury.io/rb/libhoney)
+# libhoney
+
+[![OSS Lifecycle](https://img.shields.io/osslifecycle/honeycombio/libhoney-rb)](https://github.com/honeycombio/home/blob/main/honeycomb-oss-lifecycle-and-practices.md)
+[![CircleCI Build Status](https://circleci.com/gh/honeycombio/libhoney-rb.svg?style=svg)](https://circleci.com/gh/honeycombio/libhoney-rb)
+[![Gem Version](https://badge.fury.io/rb/libhoney.svg)](https://badge.fury.io/rb/libhoney)
 
 Ruby gem for sending events to [Honeycomb](https://www.honeycomb.io), a service for debugging your software in production.
 
