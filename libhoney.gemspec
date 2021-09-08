@@ -37,5 +37,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'yardstick', '~> 0.9'
   spec.add_dependency 'addressable', '~> 2.0'
   spec.add_dependency 'excon'
-  spec.add_dependency 'http', '>= 2.0', '< 5.0'
+  spec.add_dependency 'http', '>= 2.0', '< 6.0'
 end
