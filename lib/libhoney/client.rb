@@ -110,7 +110,7 @@ module Libhoney
 
     # Nuke the queue and wait for inflight requests to complete before returning.
     # If you set drain=false, all queued requests will be dropped on the floor.
-    def close(drain = true)
+    def close(drain = true) # rubocop:disable Style/OptionalBooleanParameter
       return @transmission.close(drain) if @transmission
 
       0
