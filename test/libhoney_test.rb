@@ -373,7 +373,7 @@ class LibhoneyTest < Minitest::Test
 
   def does_not_send
     lambda { |_event|
-      raise Exception, 'libhoney: unexpected send occured'
+      raise 'libhoney: unexpected send occured'
     }
   end
 

@@ -78,8 +78,8 @@ module Libhoney
                    proxy_config: nil)
       # rubocop:enable Metrics/ParameterLists
       # check for insanity
-      raise Exception, 'libhoney:  max_concurrent_batches must be greater than 0' if max_concurrent_batches < 1
-      raise Exception, 'libhoney:  sample rate must be greater than 0'            if sample_rate < 1
+      raise 'libhoney:  max_concurrent_batches must be greater than 0' if max_concurrent_batches < 1
+      raise 'libhoney:  sample rate must be greater than 0'            if sample_rate < 1
 
       @builder = Builder.new(self, nil)
 

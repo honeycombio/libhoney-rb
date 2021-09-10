@@ -6,6 +6,9 @@ AllCops:
 Style/Documentation:
   Enabled: false
 
+Lint/RaiseException:
+  Enabled: true
+
 Lint/RescueException:
   Exclude:
     - 'lib/libhoney/transmission.rb'
