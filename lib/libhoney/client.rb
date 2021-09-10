@@ -240,18 +240,20 @@ module Libhoney
       end
 
       case transmission
+      # rubocop:disable Style/GuardClause, Style/RedundantReturn
       when NilClass # the default value for new clients
         return TransmissionClient.new(**transmission_client_params)
       when Class
         # if a class has been provided, attempt to instantiate it with parameters given to the client
         t = transmission.new(**transmission_client_params)
-        if quacks_like_a_transmission?(t) # rubocop:disable Style/GuardClause
+        if quacks_like_a_transmission?(t)
           return t
         else
           warn "#{t.class.name}: does not appear to behave like a transmission, disabling sending events"
           return NullTransmissionClient.new
         end
       end
+      # rubocop:enable Style/GuardClause, Style/RedundantReturn
     end
 
     def quacks_like_a_transmission?(transmission)
