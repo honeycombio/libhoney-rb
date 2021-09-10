@@ -115,7 +115,7 @@ module Libhoney
       # @param timeout [:never, Numeric] the amount of time in (seconds?) to wait, or :never to wait forever
       # @param timeout_policy [#call] a callable, what to do when a timeout occurs? Return a default? Raise an
       #   exception? You decide.
-      def wait_for_condition(condition, condition_predicate, timeout = :never, timeout_policy = -> { nil })
+      def wait_for_condition(condition, condition_predicate, timeout = :never, timeout_policy = -> {})
         deadline = timeout == :never ? :never : trustworthy_current_time + timeout
         @lock.synchronize do
           loop do
