@@ -34,3 +34,8 @@ Metrics/ParameterLists:
 # Offense count: 1
 Metrics/PerceivedComplexity:
   Max: 10
+
+# Disabled after setting target version to 2.3
+# Consider later.
+Style/FrozenStringLiteralComment:
+  Enabled: false
