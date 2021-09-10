@@ -101,9 +101,7 @@ module Libhoney
     end
 
     def build_user_agent(user_agent_addition)
-      ua = "libhoney-rb/#{VERSION} (exp-transmission)"
-      ua << " #{user_agent_addition}" if user_agent_addition
-      ua
+      super("(exp-transmission) #{user_agent_addition}".strip)
     end
   end
 end
