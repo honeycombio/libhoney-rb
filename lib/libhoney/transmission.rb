@@ -124,10 +124,7 @@ module Libhoney
         end
 
         @batch_queue.enq(nil)
-        if @batch_thread.nil?
-        else
-          @batch_thread.join(1.0) # limit the amount of time we'll wait for the thread to end
-        end
+        @batch_thread&.join(1.0) # limit the amount of time we'll wait for the thread to end
 
         # send @threads.length number of nils so each thread will fall out of send_loop
         @threads.length.times { @send_queue << nil }
