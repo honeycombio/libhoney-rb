@@ -2,6 +2,7 @@ inherit_from: .rubocop_todo.yml
 
 AllCops:
   TargetRubyVersion: 2.4
+  NewCops: enable
 
 Style/Documentation:
   Enabled: false
@@ -47,7 +48,7 @@ Metrics/MethodLength:
     - lib/libhoney/transmission.rb
     - test/*
 
-Metrics/LineLength:
+Layout/LineLength:
   Max: 115
   Exclude:
     - lib/libhoney/client.rb
