@@ -6,6 +6,12 @@ AllCops:
 Style/Documentation:
   Enabled: false
 
+Layout/BeginEndAlignment:
+  EnforcedStyleAlignWith: begin
+
+Layout/EmptyLineBetweenDefs:
+  AllowAdjacentOneLineDefs: true
+
 Lint/RaiseException:
   Enabled: true
 
