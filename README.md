@@ -6,7 +6,7 @@
 
 Ruby gem for sending events to [Honeycomb](https://www.honeycomb.io), a service for debugging your software in production.
 
-Requires Ruby 2.2 or greater.
+Requires Ruby 2.3 or greater.
 
 -   [Usage and Examples](https://docs.honeycomb.io/sdk/ruby/)
 -   [API Reference](https://www.rubydoc.info/gems/libhoney)
