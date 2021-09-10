@@ -304,7 +304,7 @@ module Libhoney
 
     def ensure_threads_running
       @lock.synchronize do
-        @batch_thread = Thread.new { batch_loop } unless @batch_thread && @batch_thread.alive?
+        @batch_thread = Thread.new { batch_loop } unless @batch_thread&.alive?
         @threads.select!(&:alive?)
         @threads << Thread.new { send_loop } while @threads.length < @max_concurrent_batches
       end
