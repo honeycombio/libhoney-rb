@@ -10,7 +10,7 @@ module Libhoney
   #       to verify what events your instrumented code is sending. Use in
   #       production is not recommended.
   class LogClient < Client
-    def initialize(*args, output: ::STDERR, verbose: false, **kwargs)
+    def initialize(*args, output: $stderr, verbose: false, **kwargs)
       super(*args,
             transmission: LogTransmissionClient.new(output: output, verbose: verbose),
             **kwargs)
