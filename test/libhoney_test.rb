@@ -716,9 +716,12 @@ class LibhoneyUserAgentTest < Minitest::Test
     honey.send_now('ORLY' => 'YA RLY')
     honey.close
 
+    expected_user_agent =
+      "libhoney-rb/#{::Libhoney::VERSION} Ruby/#{RUBY_VERSION} (#{RUBY_PLATFORM})"
+
     assert_requested :post,
                      'https://api.honeycomb.io/1/batch/somedataset',
-                     headers: { 'User-Agent': "libhoney-rb/#{::Libhoney::VERSION}" }
+                     headers: { 'User-Agent': expected_user_agent }
   end
 
   def test_user_agent_addition
@@ -729,7 +732,7 @@ class LibhoneyUserAgentTest < Minitest::Test
 
     assert_requested :post,
                      'https://api.honeycomb.io/1/batch/somedataset',
-                     headers: { 'User-Agent': %r{libhoney-rb/.* test/4.2} }
+                     headers: { 'User-Agent': %r{libhoney-rb/.* test/4.2 Ruby/*.} }
   end
 end
 

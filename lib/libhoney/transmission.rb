@@ -297,9 +297,10 @@ module Libhoney
     end
 
     def build_user_agent(user_agent_addition)
-      ua = "libhoney-rb/#{VERSION}"
-      ua << " #{user_agent_addition}" if user_agent_addition
-      ua
+      "libhoney-rb/#{VERSION}"
+        .concat(" #{user_agent_addition}")
+        .strip # remove trailing spaces if addition was empty
+        .concat(" Ruby/#{RUBY_VERSION} (#{RUBY_PLATFORM})")
     end
 
     def ensure_threads_running

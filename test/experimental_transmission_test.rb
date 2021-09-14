@@ -68,10 +68,10 @@ class ExperimentalTransmissionClientTest < Minitest::Test
   def test_user_agent_annotation_for_experiment
     transmission = Libhoney::ExperimentalTransmissionClient.new
 
-    assert_equal "libhoney-rb/#{::Libhoney::VERSION} (exp-transmission)",
+    assert_match "libhoney-rb/#{::Libhoney::VERSION} (exp-transmission) Ruby/#{RUBY_VERSION}",
                  transmission.__send__(:build_user_agent, nil)
 
-    assert_equal "libhoney-rb/#{::Libhoney::VERSION} (exp-transmission) awesome_sauce/42.2",
+    assert_match "libhoney-rb/#{::Libhoney::VERSION} (exp-transmission) awesome_sauce/42.2 Ruby/#{RUBY_VERSION}",
                  transmission.__send__(:build_user_agent, 'awesome_sauce/42.2')
   end
 end
