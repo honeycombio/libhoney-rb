@@ -1,5 +1,20 @@
 # libhoney-rb changelog
 
+## [1.21.0] - 2021-09-23
+
+### Added
+
+- Include Ruby runtime info in user agent (#105) | [robbkidd](https://github.com/robbkidd)
+
+### Maintenance
+
+- Update http requirement from >= 2.0, < 5.0 to >= 2.0, < 6.0 (#100)
+- Update spy requirement to accept any 1.x release (#102)
+- Update rake requirement from ~> 12.3 to ~> 13.0 (#101)
+- Add issue and PR templates (#99)
+- Add OSS lifecycle badge (#98)
+- Add community health files (#97)
+
 ## 1.20.0
 
 ### Fixes
