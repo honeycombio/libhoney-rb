@@ -55,13 +55,10 @@ module Libhoney
     # @param block_on_responses [Boolean] if true, block if there is no thread reading from the response queue
     # @param pending_work_capacity [Fixnum] defaults to 1000. If the queue of
     #   pending events exceeds 1000, this client will start dropping events.
-    # @param proxy_config [String, Array, nil] proxy connection information
+    # @param proxy_config [String, nil] proxy connection information
     #   nil: (default, recommended) connection proxying will be determined from any http_proxy, https_proxy, and no_proxy environment
     #     variables set for the process.
     #   String: the value must be the URI for connecting to a forwarding web proxy. Must be parsable by stdlib URI.
-    #   Array: (deprecated, removal in v2.0) the value must have one and at most four elements: e.g. ['host', port, 'username', 'password'].
-    #     The assumption is that the TCP connection will be tunneled via HTTP, so the assumed scheme is 'http://'
-    #     'host' is required. 'port' is optional (default:80), unless a 'username' is included. 'password' is optional.
     # rubocop:disable Metrics/ParameterLists
     def initialize(writekey: nil,
                    dataset: nil,
@@ -267,22 +264,13 @@ module Libhoney
       when String
         URI.parse(config)
       when Array
-        warn <<-WARNING
-        DEPRECATION WARNING: #{self.class.name} the proxy_config parameter will require a String value, not an Array in libhoney 2.0.
-        To resolve:
-          + recommended: set http/https_proxy environment variables, which take precedence over any option set here, then remove proxy_config parameter from client initialization
-          + set proxy_config to a String containing the forwarding proxy URI (only used if http/https_proxy are not set)
-        WARNING
-        host, port, user, password = config
-
-        parsed_config = URI::HTTP.build(host: host, port: port).tap do |uri|
-          uri.userinfo = "#{user}:#{password}" if user
-        end
-        redacted_config = parsed_config.dup.tap do |uri|
-          uri.password = 'REDACTED' unless uri.password.nil? || uri.password.empty?
-        end
-        warn "The array config given has been assumed to mean: #{redacted_config}"
-        parsed_config
+        error_message = <<~MESSAGE
+          #{self.class.name}: the optional proxy_config parameter requires a String value; Array is no longer supported.
+          To resolve:
+            + recommended: set http/https_proxy environment variables, which take precedence over any option set here, then remove proxy_config parameter from client initialization
+            + set proxy_config to a String containing the forwarding proxy URI (only used if http/https_proxy environment variables are not set)
+        MESSAGE
+        raise error_message
       end
     rescue URI::Error => e
       warn "#{self.class.name}: unable to parse proxy_config. Detail: #{e.class}: #{e.message}"
