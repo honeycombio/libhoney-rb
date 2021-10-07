@@ -7,7 +7,7 @@
 # versions of RuboCop, may require this file to be generated again.
 
 # Offense count: 3
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Exclude:
     - 'lib/libhoney/client.rb'
     - 'lib/libhoney/transmission.rb'
@@ -34,3 +34,8 @@ Metrics/ParameterLists:
 # Offense count: 1
 Metrics/PerceivedComplexity:
   Max: 10
+
+# Disabled after setting target version to 2.3
+# Consider later.
+Style/FrozenStringLiteralComment:
+  Enabled: false

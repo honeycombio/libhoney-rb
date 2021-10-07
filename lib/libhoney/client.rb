@@ -78,12 +78,8 @@ module Libhoney
                    proxy_config: nil)
       # rubocop:enable Metrics/ParameterLists
       # check for insanity
-      raise Exception, 'libhoney:  max_concurrent_batches must be greater than 0' if max_concurrent_batches < 1
-      raise Exception, 'libhoney:  sample rate must be greater than 0'            if sample_rate < 1
-
-      unless Gem::Dependency.new('ruby', '>= 2.2').match?('ruby', RUBY_VERSION)
-        raise Exception, 'libhoney:  Ruby versions < 2.2 are not supported'
-      end
+      raise 'libhoney:  max_concurrent_batches must be greater than 0' if max_concurrent_batches < 1
+      raise 'libhoney:  sample rate must be greater than 0'            if sample_rate < 1
 
       @builder = Builder.new(self, nil)
 
@@ -244,18 +240,20 @@ module Libhoney
       end
 
       case transmission
+      # rubocop:disable Style/GuardClause, Style/RedundantReturn
       when NilClass # the default value for new clients
         return TransmissionClient.new(**transmission_client_params)
       when Class
         # if a class has been provided, attempt to instantiate it with parameters given to the client
         t = transmission.new(**transmission_client_params)
-        if quacks_like_a_transmission?(t) # rubocop:disable Style/GuardClause
+        if quacks_like_a_transmission?(t)
           return t
         else
           warn "#{t.class.name}: does not appear to behave like a transmission, disabling sending events"
           return NullTransmissionClient.new
         end
       end
+      # rubocop:enable Style/GuardClause, Style/RedundantReturn
     end
 
     def quacks_like_a_transmission?(transmission)

@@ -19,10 +19,10 @@ filters_publish: &filters_publish
 matrix_rubyversions: &matrix_rubyversions
   matrix:
     parameters:
-      rubyversion: ["2.2", "2.3", "2.4", "2.5", "2.6", "2.7"]
+      rubyversion: ["2.3", "2.4", "2.5", "2.6", "2.7", "3.0"]
 
 # Default version of ruby to use for lint and publishing
-default_rubyversion: &default_rubyversion "2.7"
+default_rubyversion: &default_rubyversion "3.0"
 
 executors:
   ruby:
@@ -86,7 +86,8 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            bundle install --jobs=4 --retry=3 --path vendor/bundle
+            bundle config set --local path 'vendor/bundle'
+            bundle install --jobs=4 --retry=3
       - save_cache:
           paths:
             - ./vendor/bundle
