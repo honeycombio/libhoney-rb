@@ -39,7 +39,7 @@ class LibhoneyDefaultTest < Minitest::Test
                                  block_on_responses: true, max_batch_size: 100,
                                  send_frequency: 150, max_concurrent_batches: 100,
                                  pending_work_capacity: 1500,
-                                 proxy_config: ['proxy-hostname.local', 8080, 'username', 'password'])
+                                 proxy_config: 'http://username:password@proxy-hostname.local:8080')
 
     assert_equal 'writekey', honey.writekey
     assert_equal 'dataset', honey.dataset
@@ -77,64 +77,26 @@ class LibhoneyProxyTest < Minitest::Test
 end
 
 class LibhoneyProxyConfigArrayParsingTest < Minitest::Test
-  def setup
-    # intercept deprecation warning to test its display
-    @old_stderr = $stderr
-    $stderr = StringIO.new
-  end
-
-  def teardown
-    $stderr = @old_stderr
-  end
-
-  def test_proxy_config_array_parsing_removed_in_v2
-    assert(
-      Gem::Version.new(Libhoney::VERSION) < Gem::Version.new('2.0'),
-      'DEPRECATION: Array passed as proxy_config and this test class should be removed in the 2.0 release.'
-    )
-  end
-
-  def test_deprecation_warning_when_proxy_config_is_array
-    honey = Libhoney::Client.new(
-      writekey: 'writekey',
-      dataset: 'dataset',
-      proxy_config: ['proxy-hostname.local']
-    )
-
-    assert_equal 'http://proxy-hostname.local', honey.instance_variable_get(:@proxy_config).to_s
+  def test_exception_raised_when_proxy_config_is_array
+    exception = assert_raises RuntimeError do
+      Libhoney::Client.new(
+        writekey: 'writekey',
+        dataset: 'dataset',
+        proxy_config: ['proxy-hostname.local']
+      )
+    end
     assert_match(
-      /DEPRECATION WARNING.*proxy_config/, $stderr.string,
-      'should log a deprecation warning about proxy_config'
+      /proxy_config parameter requires a String value/, exception.message,
+      'should state the required type for the proxy_config parameter'
     )
     assert_match(
-      %r{set http/https_proxy}, $stderr.string,
+      %r{set http/https_proxy}, exception.message,
       'should recommend using environment variables'
     )
     assert_match(
-      /set proxy_config to a String/, $stderr.string,
+      /set proxy_config to a String/, exception.message,
       'should recommend using a string value for proxy_config'
     )
-  end
-
-  def test_proxy_config_array_parsing_with_basic_auth
-    with_password = Libhoney::Client.new(proxy_config: ['proxy-hostname.local', 8080, 'username', 'password'])
-    assert_equal(
-      'http://username:password@proxy-hostname.local:8080',
-      with_password.instance_variable_get(:@proxy_config).to_s
-    )
-  end
-
-  def test_proxy_config_array_parsing_with_basic_auth_no_password
-    no_password = Libhoney::Client.new(proxy_config: ['proxy-hostname.local', 8080, 'username'])
-    assert_equal(
-      'http://username:@proxy-hostname.local:8080',
-      no_password.instance_variable_get(:@proxy_config).to_s
-    )
-  end
-
-  def test_proxy_config_array_parsing_with_bad_array
-    Libhoney::Client.new(proxy_config: ['proxy-hostname.local', 'username'])
-    assert_match(/unable to parse proxy_config/, $stderr.string, 'should warn when proxy_config is not parsable')
   end
 end
 
