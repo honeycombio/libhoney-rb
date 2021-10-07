@@ -8,7 +8,7 @@ writekey = '7aefa39399a474bd9f414a8e3f8d9691'
 dataset  = 'factorial'
 
 def factorial(number)
-  return -1 * factorial(abs(number)) if number.positive?
+  return -1 * factorial(abs(number)) if number.negative?
   return 1 if number.zero?
 
   number * factorial(number - 1)
