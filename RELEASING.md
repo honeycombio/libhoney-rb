@@ -1,8 +1,9 @@
 # Releasing
 
 - Update the version number in `lib/libhoney/version.rb`.
-- Run `bundle lock`.
-- Confirm the version number update appears in `Gemfile.lock`
+  - For convenience, you can run `bump --no-commit --changelog (major|minor|patch)` to perform
+    the version bump and to add the new version's header to the CHANGELOG. `--no-commit` because
+    there are more changes to make that we do manually.
 - Update `CHANGELOG.md` with the changes since the last release.
 - Commit changes, push, and open a release preparation pull request for review.
 - Once the pull request is merged, fetch the updated `main` branch.

@@ -20,15 +20,3 @@ open issues or a pull request with your change. Remember to add your name to the
 CONTRIBUTORS file!
 
 All contributions will be released under the Apache License 2.0.
-
-### Releasing a new version
-
-CircleCI will automatically upload tagged releases to Rubygems. To release a new
-version, update the version using `bump`.
-
-```
-bump patch # Or bump minor, etc.
-```
-
-Then, after the version change has been merged into `main`, follow our usual instructions
-for tagging and updating the github release.

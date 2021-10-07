@@ -1,5 +1,3 @@
-# libhoney-rb changelog
-
 ## [2.0.0] - 2021-10-07
 
 ### 💥 Breaking Changes
