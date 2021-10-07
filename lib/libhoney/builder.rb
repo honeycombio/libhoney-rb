@@ -2,8 +2,7 @@ require 'libhoney/event'
 
 module Libhoney
   class Builder
-    attr_accessor :writekey, :dataset, :sample_rate, :api_host
-    attr_accessor :fields, :dyn_fields
+    attr_accessor :writekey, :dataset, :sample_rate, :api_host, :fields, :dyn_fields
 
     # @api private
     # @see Client#builder

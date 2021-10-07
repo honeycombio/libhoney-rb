@@ -19,7 +19,7 @@ filters_publish: &filters_publish
 matrix_rubyversions: &matrix_rubyversions
   matrix:
     parameters:
-      rubyversion: ["2.3", "2.4", "2.5", "2.6", "2.7", "3.0"]
+      rubyversion: ["2.4", "2.5", "2.6", "2.7", "3.0"]
 
 # Default version of ruby to use for lint and publishing
 default_rubyversion: &default_rubyversion "3.0"
@@ -31,7 +31,7 @@ executors:
         type: string
         default: *default_rubyversion
     docker:
-      - image: circleci/ruby:<< parameters.rubyversion >>
+      - image: cimg/ruby:<< parameters.rubyversion >>
   github:
     docker:
       - image: cibuilds/github:0.13.0
