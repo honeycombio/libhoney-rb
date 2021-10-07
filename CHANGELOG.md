@@ -1,5 +1,18 @@
 # libhoney-rb changelog
 
+## [2.0.0] - 2021-10-07
+
+### 💥 Breaking Changes
+
+- support dropped for Ruby 2.2 (#104) | [robbkidd](https://github.com/robbkidd)
+- support dropped for Ruby 2.3 (#106) | [robbkidd](https://github.com/robbkidd)
+- remove deprecated support for accepting an Array for client proxy_config (#112) | [robbkidd](https://github.com/robbkidd)
+
+### 🛠 Maintenance
+
+- Change maintenance badge to maintained (#109) | [JamieDanielson](https://github.com/JamieDanielson)
+- Adds Stalebot (#110) | [JamieDanielson](https://github.com/JamieDanielson)
+
 ## [1.21.0] - 2021-09-23
 
 ### Added
