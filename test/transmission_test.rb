@@ -51,4 +51,27 @@ class TransmissionClientTest < Minitest::Test
     drain = true
     transmission.close(drain) # implicit assertion that this does not raise an error and fail the test
   end
+
+  def test_receiving_EOFError_allows_one_retry
+    Excon.defaults[:mock] = true
+    Excon.stub({}, {:body => 'Fallback', :status => 500, :error => Excon::Error::Socket})
+
+    mock_builder = Minitest::Mock.new
+    mock_builder.expect :writekey, 'write_key'
+    mock_builder.expect :dataset, 'dataset'
+    mock_builder.expect :sample_rate, 'sample_rate'
+    mock_builder.expect :api_host, 'http://localhost:8080'
+    event = Libhoney::Event.new(nil, mock_builder)
+
+    response_queue = SizedQueue.new(10)
+    transmission = Libhoney::TransmissionClient.new(responses: response_queue)
+    transmission.add(event)
+    sleep(0.5)
+    
+    assert_equal(1, response_queue.length)
+    e = response_queue.pop
+    refute_nil(e)
+    refute_nil(e.error)
+    puts "An error of type #{e.error} happened"
+  end
 end
