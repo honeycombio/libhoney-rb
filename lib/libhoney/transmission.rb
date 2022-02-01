@@ -74,11 +74,26 @@ module Libhoney
             'X-Honeycomb-Team' => writekey
           }
 
-          response = http.post(
-            path: "/1/batch/#{Addressable::URI.escape(dataset)}",
-            body: body,
-            headers: headers
-          )
+          begin
+            response = http.post(
+              path: "/1/batch/#{Addressable::URI.escape(dataset)}",
+              body: body,
+              headers: headers
+            )
+          rescue Excon::Error::Socket => e
+            # Excon's connection pool could have a closed connection which throws
+            # an Excon SocketError wrapping an EOFError
+            if e.socket_error.instance_of?(EOFError)
+              # force excon client close socket
+              http.reset
+              # next action will open new socket
+              response = http.post(
+                path: "/1/batch/#{Addressable::URI.escape(dataset)}",
+                body: body,
+                headers: headers
+              )
+            end
+          end
           process_response(response, before, batch)
         rescue Exception => e
           # catch a broader swath of exceptions than is usually good practice,
