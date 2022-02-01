@@ -74,8 +74,7 @@ module Libhoney
             'X-Honeycomb-Team' => writekey
           }
 
-          response = send_with_retry(http, dataset, body, headers)
-          process_response(response, before, batch)
+          send_with_retry(http, dataset, body, headers, before, batch)
         rescue Exception => e
           # catch a broader swath of exceptions than is usually good practice,
           # because this is effectively the top-level exception handler for the
@@ -334,27 +333,27 @@ module Libhoney
       end
     end
 
-    def send_with_retry(client, dataset, body, headers)
-      begin
-        response = client.post(
-          path: "/1/batch/#{Addressable::URI.escape(dataset)}",
-          body: body,
-          headers: headers
-        )
-      rescue Excon::Error::Socket => e
-        # Excon's connection pool could have a closed connection which throws
-        # an Excon SocketError wrapping an EOFError
-        raise unless e.socket_error.instance_of?(EOFError)
-          # force excon client close socket
-          http.reset
-          # next action will open new socket
-          response = client.post(
-            path: "/1/batch/#{Addressable::URI.escape(dataset)}",
-            body: body,
-            headers: headers
-          )
-        end
-      end
+    def send_with_retry(client, dataset, body, headers, before, batch)
+      response = client.post(
+        path: "/1/batch/#{Addressable::URI.escape(dataset)}",
+        body: body,
+        headers: headers
+      )
+    rescue Excon::Error::Socket => e
+      # Excon's connection pool could have a closed connection which throws
+      # an Excon SocketError wrapping an EOFError
+      raise unless e.socket_error.instance_of?(EOFError)
+
+      # force excon client close socket
+      http.reset
+      # next action will open new socket
+      response = client.post(
+        path: "/1/batch/#{Addressable::URI.escape(dataset)}",
+        body: body,
+        headers: headers
+      )
+    ensure
+      process_response(response, before, batch)
     end
   end
 end
