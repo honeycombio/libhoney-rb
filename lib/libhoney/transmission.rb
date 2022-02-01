@@ -74,7 +74,8 @@ module Libhoney
             'X-Honeycomb-Team' => writekey
           }
 
-          send_with_retry(http, dataset, body, headers, before, batch)
+          response = send_with_retry(http, dataset, body, headers)
+          process_response(response, before, batch)
         rescue Exception => e
           # catch a broader swath of exceptions than is usually good practice,
           # because this is effectively the top-level exception handler for the
@@ -333,8 +334,8 @@ module Libhoney
       end
     end
 
-    def send_with_retry(client, dataset, body, headers, before, batch)
-      response = client.post(
+    def send_with_retry(client, dataset, body, headers)
+      client.post(
         path: "/1/batch/#{Addressable::URI.escape(dataset)}",
         body: body,
         headers: headers
@@ -347,13 +348,11 @@ module Libhoney
       # force excon client close socket
       http.reset
       # next action will open new socket
-      response = client.post(
+      client.post(
         path: "/1/batch/#{Addressable::URI.escape(dataset)}",
         body: body,
         headers: headers
       )
-    ensure
-      process_response(response, before, batch)
     end
   end
 end
