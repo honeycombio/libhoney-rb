@@ -335,24 +335,30 @@ module Libhoney
     end
 
     def send_with_retry(client, dataset, body, headers)
-      client.post(
-        path: "/1/batch/#{Addressable::URI.escape(dataset)}",
-        body: body,
-        headers: headers
-      )
-    rescue Excon::Error::Socket => e
-      # Excon's connection pool could have a closed connection which throws
-      # an Excon SocketError wrapping an EOFError
-      raise unless e.socket_error.instance_of?(EOFError)
-
-      # force excon client close socket
-      http.reset
-      # next action will open new socket
-      client.post(
-        path: "/1/batch/#{Addressable::URI.escape(dataset)}",
-        body: body,
-        headers: headers
-      )
+      attempts = 0
+      begin
+        attempts += 1
+        client.post(
+          path: "/1/batch/#{Addressable::URI.escape(dataset)}",
+          body: body,
+          headers: headers
+        )
+      rescue Excon::Error::Socket => e
+        case e.socket_error
+        when EOFError
+          # The server may have closed an idle connection, but only
+          # half-way. In this scenario, Excon will receive an EOFError
+          # when attempting to post to the connection. We'll allow one
+          # retry after resetting the connection.
+          # We're not using Excon's idempotent retries because we only
+          # want to retry in the specific case of this exception, not
+          # retry all errors.
+          client.reset
+          retry if attempts < 2
+        else
+          raise
+        end
+      end
     end
   end
 end
