@@ -72,9 +72,7 @@ class TransmissionClientTest < Minitest::Test
     response_queue = SizedQueue.new(10)
     transmission = Libhoney::TransmissionClient.new(responses: response_queue)
     transmission.add(event)
-    sleep(0.5)
 
-    assert_equal(1, response_queue.length)
     response = response_queue.pop
     refute_nil(response, 'There is a response for the event')
     assert_nil(response.error, 'No error on the response')
