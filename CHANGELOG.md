@@ -1,3 +1,15 @@
+## [2.0.1] - 2022-02-02
+
+### Fixes
+
+- Retry an event batch send once if the connection appears to have been closed by the server due to idleness (#120) | [MikeGoldsmith](https://github.com/MikeGoldsmith)
+
+### Maintenance
+
+- gh: add re-triage workflow (#117) | [vreynolds](https://github.com/vreynolds)
+- Update dependabot to monthly (#116) | [vreynolds](https://github.com/vreynolds)
+- empower apply-labels action to apply labels (#115) | [robbkidd](https://github.com/robbkidd)
+
 ## [2.0.0] - 2021-10-07
 
 ### 💥 Breaking Changes
@@ -28,7 +40,7 @@
 
 ## 1.20.0
 
-### Fixes
+### Fixes
 
 - Handle Timeout::Error in TransmissionClient (#95) | [Adam Pohorecki](https://github.com/psyho)
 
