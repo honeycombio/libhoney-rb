@@ -76,8 +76,8 @@ class TransmissionClientTest < Minitest::Test
 
     assert_equal(1, response_queue.length)
     response = response_queue.pop
-    refute_nil(response, 'There is a response for the event.')
-    assert_nil(response.error, 'No error on the response.')
+    refute_nil(response, 'There is a response for the event')
+    assert_nil(response.error, 'No error on the response')
   ensure
     Excon.unstub({ path: '/1/batch/sever_this_connection' })
   end
