@@ -352,11 +352,12 @@ module Libhoney
           # retry after resetting the connection.
           # We're not using Excon's idempotent retries because we only
           # want to retry in the specific case of this exception, not
-          # retry all errors.
+          # retry all errors. Setting Excons :retry_errors param did not
+          # succeed in catching this situation.
           client.reset
           retry if attempts < 2
         else
-          raise
+          raise e
         end
       end
     end
