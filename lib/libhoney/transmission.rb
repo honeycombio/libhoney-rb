@@ -74,11 +74,7 @@ module Libhoney
             'X-Honeycomb-Team' => writekey
           }
 
-          response = http.post(
-            path: "/1/batch/#{Addressable::URI.escape(dataset)}",
-            body: body,
-            headers: headers
-          )
+          response = send_with_retry(http, dataset, body, headers)
           process_response(response, before, batch)
         rescue Exception => e
           # catch a broader swath of exceptions than is usually good practice,
@@ -335,6 +331,34 @@ module Libhoney
         )
 
         h[api_host] = client
+      end
+    end
+
+    def send_with_retry(client, dataset, body, headers)
+      attempts = 0
+      begin
+        attempts += 1
+        client.post(
+          path: "/1/batch/#{Addressable::URI.escape(dataset)}",
+          body: body,
+          headers: headers
+        )
+      rescue Excon::Error::Socket => e
+        case e.socket_error
+        when EOFError
+          # The server may have closed an idle connection, but only
+          # half-way. In this scenario, Excon will receive an EOFError
+          # when attempting to post to the connection. We'll allow one
+          # retry after resetting the connection.
+          # We're not using Excon's idempotent retries because we only
+          # want to retry in the specific case of this exception, not
+          # retry all errors. Setting Excons :retry_errors param did not
+          # succeed in catching this situation.
+          client.reset
+          retry if attempts < 2
+        else
+          raise e
+        end
       end
     end
   end
