@@ -1,6 +1,6 @@
 ## [2.1.0] - 2022-02-02
 
-### Fixes
+### Improvements
 
 - Retry an event batch send once if the connection appears to have been closed by the server due to idleness (#120) | [MikeGoldsmith](https://github.com/MikeGoldsmith)
 
@@ -86,7 +86,7 @@
 
 - Don't moneypatch Class (#70)
 
-### Maintenance:
+### Maintenance:
 
 - Add lockfile to gitignore (#71)
 
