@@ -280,7 +280,11 @@ module Libhoney
     def get_dataset(dataset, write_key)
       return dataset if classic_write_key?(write_key)
 
-      dataset.nil? || dataset.empty? ? DEFAULT_DATASET : dataset
+      if dataset.nil? || dataset.empty?
+        warn('found extra whitespace in service name')
+        dataset = DEFAULT_DATASET
+      end
+      dataset
     end
 
     def classic_write_key?(write_key)
