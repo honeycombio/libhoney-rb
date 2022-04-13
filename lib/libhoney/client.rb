@@ -286,7 +286,7 @@ module Libhoney
       end
       trimmed = dataset.strip
       if dataset != trimmed
-        warn "dataset contained leading or trailing whitespace - sending data '#{trimmed}'"
+        warn "dataset contained leading or trailing whitespace - sending data to '#{trimmed}'"
         dataset = trimmed
       end
       dataset
