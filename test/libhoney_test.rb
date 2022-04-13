@@ -73,6 +73,13 @@ class LibhoneyDefaultTest < Minitest::Test
     assert_equal 'd68f9ed1e96432ac1a3380', honey.writekey
     assert_equal 'dataset', honey.dataset
   end
+
+  def test_initialize_with_non_classic_writekey_set_dataset_with_whitespace
+    honey = Libhoney::Client.new(writekey: 'd68f9ed1e96432ac1a3380', dataset: '  dataset  ')
+
+    assert_equal 'd68f9ed1e96432ac1a3380', honey.writekey
+    assert_equal 'dataset', honey.dataset
+  end
 end
 
 class LibhoneyProxyTest < Minitest::Test

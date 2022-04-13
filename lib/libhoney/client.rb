@@ -281,8 +281,13 @@ module Libhoney
       return dataset if classic_write_key?(write_key)
 
       if dataset.nil? || dataset.empty?
-        warn('nil or empty dataset - sending data to \'unknown_dataset\'')
+        warn "nil or empty dataset - sending data to '#{DEFAULT_DATASET}'"
         dataset = DEFAULT_DATASET
+      end
+      trimmed = dataset.strip
+      if dataset != trimmed
+        warn "dataset contained leading or trailing whitespace - sending data '#{trimmed}'"
+        dataset = trimmed
       end
       dataset
     end
