@@ -52,6 +52,27 @@ class LibhoneyDefaultTest < Minitest::Test
     assert_equal 100, honey.max_concurrent_batches
     assert_equal 1500, honey.pending_work_capacity
   end
+
+  def test_initialize_with_non_classic_writekey_nil_dataset
+    honey = Libhoney::Client.new(writekey: 'd68f9ed1e96432ac1a3380', dataset: nil)
+
+    assert_equal 'd68f9ed1e96432ac1a3380', honey.writekey
+    assert_equal 'unknown_dataset', honey.dataset
+  end
+
+  def test_initialize_with_non_classic_writekey_empty_dataset
+    honey = Libhoney::Client.new(writekey: 'd68f9ed1e96432ac1a3380', dataset: '')
+
+    assert_equal 'd68f9ed1e96432ac1a3380', honey.writekey
+    assert_equal 'unknown_dataset', honey.dataset
+  end
+
+  def test_initialize_with_non_classic_writekey_set_dataset
+    honey = Libhoney::Client.new(writekey: 'd68f9ed1e96432ac1a3380', dataset: 'dataset')
+
+    assert_equal 'd68f9ed1e96432ac1a3380', honey.writekey
+    assert_equal 'dataset', honey.dataset
+  end
 end
 
 class LibhoneyProxyTest < Minitest::Test
