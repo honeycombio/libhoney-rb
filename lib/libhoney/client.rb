@@ -281,7 +281,7 @@ module Libhoney
       return dataset if classic_write_key?(write_key)
 
       if dataset.nil? || dataset.empty?
-        warn('found extra whitespace in service name')
+        warn('nil or empty dataset - sending data to \'unknown_dataset\'')
         dataset = DEFAULT_DATASET
       end
       dataset
