@@ -56,6 +56,7 @@ class LibhoneyDefaultTest < Minitest::Test
   def test_initialize_with_non_classic_writekey_nil_dataset
     honey = Libhoney::Client.new(writekey: 'd68f9ed1e96432ac1a3380', dataset: nil)
 
+    assert_match(/dataset/, $stderr.string, 'nil or empty dataset - sending data to \'unknown_dataset\'')
     assert_equal 'd68f9ed1e96432ac1a3380', honey.writekey
     assert_equal 'unknown_dataset', honey.dataset
   end
@@ -63,6 +64,7 @@ class LibhoneyDefaultTest < Minitest::Test
   def test_initialize_with_non_classic_writekey_empty_dataset
     honey = Libhoney::Client.new(writekey: 'd68f9ed1e96432ac1a3380', dataset: '')
 
+    assert_match(/dataset/, $stderr.string, 'nil or empty dataset - sending data to \'unknown_dataset\'')
     assert_equal 'd68f9ed1e96432ac1a3380', honey.writekey
     assert_equal 'unknown_dataset', honey.dataset
   end
@@ -77,6 +79,7 @@ class LibhoneyDefaultTest < Minitest::Test
   def test_initialize_with_non_classic_writekey_and_dataset_with_whitespace
     honey = Libhoney::Client.new(writekey: 'd68f9ed1e96432ac1a3380', dataset: '  dataset  ')
 
+    assert_match(/dataset/, $stderr.string, 'dataset contained leading or trailing whitespace - sending data to \'dataset\'')
     assert_equal 'd68f9ed1e96432ac1a3380', honey.writekey
     assert_equal 'dataset', honey.dataset
   end
