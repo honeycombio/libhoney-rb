@@ -1,3 +1,9 @@
+## [2.2.0] - 2022-04-14
+
+### Added
+
+- Add Environment and Services support (#123) | [@MikeGoldsmith](https://github.com/MikeGoldsmith)
+
 ## [2.1.0] - 2022-02-02
 
 ### Improvements
