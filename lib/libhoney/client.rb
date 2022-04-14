@@ -34,6 +34,7 @@ module Libhoney
     extend Forwardable
 
     API_HOST = 'https://api.honeycomb.io/'.freeze
+    DEFAULT_DATASET = 'unknown_dataset'.freeze
 
     # Instantiates libhoney and prepares it to send events to Honeycomb.
     #
@@ -81,7 +82,7 @@ module Libhoney
       @builder = Builder.new(self, nil)
 
       @builder.writekey    = writekey
-      @builder.dataset     = dataset
+      @builder.dataset     = get_dataset(dataset, writekey)
       @builder.sample_rate = sample_rate
       @builder.api_host    = api_host
 
@@ -274,6 +275,25 @@ module Libhoney
       end
     rescue URI::Error => e
       warn "#{self.class.name}: unable to parse proxy_config. Detail: #{e.class}: #{e.message}"
+    end
+
+    def get_dataset(dataset, write_key)
+      return dataset if classic_write_key?(write_key)
+
+      if dataset.nil? || dataset.empty?
+        warn "nil or empty dataset - sending data to '#{DEFAULT_DATASET}'"
+        dataset = DEFAULT_DATASET
+      end
+      trimmed = dataset.strip
+      if dataset != trimmed
+        warn "dataset contained leading or trailing whitespace - sending data to '#{trimmed}'"
+        dataset = trimmed
+      end
+      dataset
+    end
+
+    def classic_write_key?(write_key)
+      write_key.nil? || write_key.length == 32
     end
   end
 end
