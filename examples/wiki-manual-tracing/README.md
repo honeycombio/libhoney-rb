@@ -20,8 +20,12 @@ If you do not have an API key yet, sign up for a [free Honeycomb account](https:
 
 Once you have your API key, run:
 
-```bash
-$ HONEYCOMB_API_KEY=foobarbaz ruby wiki.rb
+```shell
+bundle install
+```
+
+```shell
+HONEYCOMB_API_KEY=foobarbaz bundle exec ruby wiki.rb
 ```
 
 And load [`http://localhost:4567/view/MyFirstWikiPage`](http://localhost:4567/view/MyFirstWikiPage) to create (then view) your first wiki page.
