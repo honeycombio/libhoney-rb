@@ -11,7 +11,7 @@
 /test/tmp/
 /test/version_tmp/
 /tmp/
-/examples/**/*.txt
+/examples/wiki-manual-tracing/*.txt
 
 # Used by dotenv library to load environment variables.
 # .env
