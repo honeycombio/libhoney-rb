@@ -65,7 +65,7 @@ class App < Sinatra::Base
   configure do
     set :libhoney, Libhoney::Client.new(
       writekey: ENV['HONEYCOMB_API_KEY'],
-      dataset:  'ruby-wiki-tracing-example'
+      dataset: 'ruby-wiki-tracing-example'
     )
   end
 
