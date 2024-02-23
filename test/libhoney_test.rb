@@ -107,19 +107,19 @@ class LibhoneyKeyChecking < Minitest::Test
   end
 
   def test_classic_key_32_chars
-    assert @honey.send('classic_write_key?', SecureRandom.alphanumeric(32))
+    assert @honey.classic_write_key? SecureRandom.alphanumeric(32)
   end
 
   def test_classic_key_v3_ingest
-    assert @honey.send('classic_write_key?', "hcaic_#{SecureRandom.alphanumeric(58)}")
+    assert @honey.classic_write_key? "hcaic_#{SecureRandom.alphanumeric(58)}"
   end
 
   def test_not_classic_key
-    refute @honey.send('classic_write_key?', SecureRandom.alphanumeric(22))
+    refute @honey.classic_write_key? SecureRandom.alphanumeric(22)
   end
 
   def test_not_classic_key_v3_ingest
-    refute @honey.send('classic_write_key?', "hcaik_#{SecureRandom.alphanumeric(58)}")
+    refute @honey.classic_write_key? "hcaik_#{SecureRandom.alphanumeric(58)}"
   end
 end
 
