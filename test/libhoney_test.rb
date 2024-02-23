@@ -54,7 +54,8 @@ class LibhoneyDefaultTest < Minitest::Test
   end
 
   def test_initialize_with_classic_v3_ingestkey_and_dataset
-    classic_v3_ingest_key = "hcaic_#{SecureRandom.alphanumeric(58)}"
+    #                                       1         2         3         4         5
+    classic_v3_ingest_key = 'hcaic_1234567890123456789012345678901234567890123456789012345678'
     honey = Libhoney::Client.new(
       writekey: classic_v3_ingest_key,
       dataset: 'an dataset'
@@ -107,25 +108,29 @@ class LibhoneyKeyChecking < Minitest::Test
   end
 
   def test_classic_key_32_chars
-    classic_key = SecureRandom.alphanumeric(32)
+    #                       1         2         3
+    classic_key = '12345678901234567890123456789012'
     assert Libhoney.classic_write_key? classic_key
     assert @honey.classic_write_key? classic_key
   end
 
   def test_classic_key_v3_ingest
-    classic_v3_ingest_key = "hcaic_#{SecureRandom.alphanumeric(58)}"
+    #                                       1         2         3         4         5
+    classic_v3_ingest_key = 'hcaic_1234567890123456789012345678901234567890123456789012345678'
     assert Libhoney.classic_write_key? classic_v3_ingest_key
     assert @honey.classic_write_key? classic_v3_ingest_key
   end
 
   def test_not_classic_key
-    og_key = SecureRandom.alphanumeric(22)
+    #                  1         2
+    og_key = '1234567890123456789012'
     refute Libhoney.classic_write_key? og_key
     refute @honey.classic_write_key? og_key
   end
 
   def test_not_classic_key_v3_ingest
-    v3_ingest_key = "hcaik_#{SecureRandom.alphanumeric(58)}"
+    #                               1         2         3         4         5
+    v3_ingest_key = 'hcaik_1234567890123456789012345678901234567890123456789012345678'
     refute Libhoney.classic_write_key? v3_ingest_key
     refute @honey.classic_write_key? v3_ingest_key
   end
