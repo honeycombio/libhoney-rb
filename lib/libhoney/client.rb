@@ -203,11 +203,11 @@ module Libhoney
       rand(1..sample_rate) != 1
     end
 
+    private
+
     def classic_write_key?(write_key)
       Libhoney.classic_write_key?(write_key)
     end
-
-    private
 
     ##
     # Parameters to pass to a transmission based on client config.
