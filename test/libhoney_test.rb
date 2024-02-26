@@ -134,6 +134,14 @@ class LibhoneyKeyChecking < Minitest::Test
     refute Libhoney.classic_write_key? v3_ingest_key
     refute @honey.classic_write_key? v3_ingest_key
   end
+
+  def test_not_classic_key_v3_key_id_only
+    #                           1         2
+    v3_key_id = 'hcxik_12345678901234567890123456'
+    failure_message = 'Despite a v3 key ID being 32 characters, it is not a classic key.'
+    refute Libhoney.classic_write_key?(v3_key_id), failure_message
+    refute @honey.classic_write_key?(v3_key_id), failure_message
+  end
 end
 
 class LibhoneyProxyTest < Minitest::Test
