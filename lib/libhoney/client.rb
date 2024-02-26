@@ -206,7 +206,7 @@ module Libhoney
     private
 
     def classic_write_key?(write_key)
-      Libhoney.classic_write_key?(write_key)
+      Libhoney.classic_api_key?(write_key)
     end
 
     ##
