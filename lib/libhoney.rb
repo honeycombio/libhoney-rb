@@ -10,7 +10,7 @@ require 'libhoney/transmission'
 module Libhoney
   def self.classic_write_key?(write_key)
     write_key.nil? ||
-      write_key.length == 32 ||
-      write_key =~ /^hc[a-z]ic_[[:alnum:]]{58}$/
+      write_key.match(/\A[[:alnum:]]{32}\z/) ||
+      write_key.match(/\Ahc[a-z]ic_[[:alnum:]]{58}\z/)
   end
 end
