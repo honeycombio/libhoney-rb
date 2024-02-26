@@ -205,10 +205,6 @@ module Libhoney
 
     private
 
-    def classic_write_key?(write_key)
-      Libhoney.classic_api_key?(write_key)
-    end
-
     ##
     # Parameters to pass to a transmission based on client config.
     #
@@ -294,6 +290,10 @@ module Libhoney
         dataset = trimmed
       end
       dataset
+    end
+
+    def classic_write_key?(write_key)
+      Libhoney.classic_api_key?(write_key)
     end
   end
 end
