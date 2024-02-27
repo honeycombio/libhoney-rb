@@ -107,6 +107,11 @@ class LibhoneyKeyChecking < Minitest::Test
     @honey = Libhoney::Client.new(writekey: "We don't care about this one.", dataset: 'whatevs')
   end
 
+  def test_classic_when_no_api_key_provided
+    assert Libhoney.classic_api_key?(nil)
+    assert @honey.send("classic_write_key?", nil)
+  end
+
   def test_classic_key_32_chars
     #                       1         2         3
     classic_key = '12345678901234567890123456789012'
