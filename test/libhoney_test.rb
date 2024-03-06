@@ -113,10 +113,10 @@ class LibhoneyKeyChecking < Minitest::Test
   end
 
   def test_classic_key_32_chars
-    #                       1         2         3
-    classic_key = '12345678901234567890123456789012'
-    assert Libhoney.classic_api_key? classic_key
-    assert @honey.send('classic_write_key?', classic_key)
+    #                          1         2         3
+    classic_og_key = '12345678901234567890123456789012'
+    assert Libhoney.classic_api_key? classic_og_key
+    assert @honey.send('classic_write_key?', classic_og_key)
   end
 
   def test_classic_key_v3_ingest
@@ -127,10 +127,10 @@ class LibhoneyKeyChecking < Minitest::Test
   end
 
   def test_not_classic_key
-    #                  1         2
-    og_key = '1234567890123456789012'
-    refute Libhoney.classic_api_key? og_key
-    refute @honey.send('classic_write_key?', og_key)
+    #                     1         2
+    e_n_s_key = '1234567890123456789012'
+    refute Libhoney.classic_api_key? e_n_s_key
+    refute @honey.send('classic_write_key?', e_n_s_key)
   end
 
   def test_not_classic_key_v3_ingest
