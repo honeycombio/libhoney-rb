@@ -109,35 +109,35 @@ class LibhoneyKeyChecking < Minitest::Test
 
   def test_classic_when_no_api_key_provided
     assert Libhoney.classic_api_key?(nil)
-    assert @honey.send('classic_write_key?', nil)
+    assert @honey.send('classic_api_key?', nil)
   end
 
   def test_classic_key_32_chars
     #                          1         2         3
     classic_og_key = '12345678901234567890123456789012'
     assert Libhoney.classic_api_key? classic_og_key
-    assert @honey.send('classic_write_key?', classic_og_key)
+    assert @honey.send('classic_api_key?', classic_og_key)
   end
 
   def test_classic_key_v3_ingest
     #                                       1         2         3         4         5
     classic_v3_ingest_key = 'hcaic_1234567890123456789012345678901234567890123456789012345678'
     assert Libhoney.classic_api_key? classic_v3_ingest_key
-    assert @honey.send('classic_write_key?', classic_v3_ingest_key)
+    assert @honey.send('classic_api_key?', classic_v3_ingest_key)
   end
 
   def test_not_classic_key
     #                     1         2
     e_n_s_key = '1234567890123456789012'
     refute Libhoney.classic_api_key? e_n_s_key
-    refute @honey.send('classic_write_key?', e_n_s_key)
+    refute @honey.send('classic_api_key?', e_n_s_key)
   end
 
   def test_not_classic_key_v3_ingest
     #                               1         2         3         4         5
     v3_ingest_key = 'hcaik_1234567890123456789012345678901234567890123456789012345678'
     refute Libhoney.classic_api_key? v3_ingest_key
-    refute @honey.send('classic_write_key?', v3_ingest_key)
+    refute @honey.send('classic_api_key?', v3_ingest_key)
   end
 
   def test_not_classic_key_v3_key_id_only
@@ -145,7 +145,7 @@ class LibhoneyKeyChecking < Minitest::Test
     v3_key_id = 'hcxik_12345678901234567890123456'
     failure_message = 'Despite a v3 key ID being 32 characters, it is not a classic key.'
     refute Libhoney.classic_api_key?(v3_key_id), failure_message
-    refute @honey.send('classic_write_key?', v3_key_id), failure_message
+    refute @honey.send('classic_api_key?', v3_key_id), failure_message
   end
 end
 

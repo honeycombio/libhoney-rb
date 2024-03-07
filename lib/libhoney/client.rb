@@ -278,7 +278,7 @@ module Libhoney
     end
 
     def get_dataset(dataset, write_key)
-      return dataset if classic_write_key?(write_key)
+      return dataset if classic_api_key?(write_key)
 
       if dataset.nil? || dataset.empty?
         warn "nil or empty dataset - sending data to '#{DEFAULT_DATASET}'"
@@ -292,7 +292,8 @@ module Libhoney
       dataset
     end
 
-    def classic_write_key?(write_key)
+    # @api private
+    def classic_api_key?(write_key)
       Libhoney.classic_api_key?(write_key)
     end
   end
