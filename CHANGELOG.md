@@ -1,3 +1,24 @@
+## [2.3.0] - 2024-03-07
+
+### Enhancements
+
+- feat: support classic-flavored ingest keys (#138) | [robbkidd](https://github.com/robbkidd)
+
+### Maintenance
+
+- maint: add labels to release.yml for auto-generated grouping (#139) | [JamieDanielson](https://github.com/JamieDanielson)
+- maint: update codeowners to pipeline-team (#137) | [JamieDanielson](https://github.com/JamieDanielson)
+- maint: update codeowners to pipeline (#136) | [JamieDanielson](https://github.com/JamieDanielson)
+- docs: add development.md (#135) | [vreynolds](https://github.com/vreynolds)
+- chore: update dependabot title (#134) | [pkanal](https://github.com/pkanal)
+- ci: update validate PR title workflow (#133) | [pkanal](https://github.com/pkanal)
+- ci: validate PR title (#132) | [pkanal](https://github.com/pkanal)
+- maint: add wiki tracing example (#131) | [vreynolds](https://github.com/vreynolds)
+- maint: delete workflows for old board (#130) | [vreynolds](https://github.com/vreynolds)
+- maint: add release file (#129) | [vreynolds](https://github.com/vreynolds)
+- maint: add new project workflow (#128) | [vreynolds](https://github.com/vreynolds)
+- maint: add ruby 3.1 to CI matrix (#127) | [vreynolds](https://github.com/vreynolds)
+
 ## [2.2.0] - 2022-04-14
 
 ### Added
