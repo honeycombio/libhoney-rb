@@ -245,6 +245,124 @@ class ExperimentalLibhoneyTest < Minitest::Test
 
     assert_requested :post, 'https://api.honeycomb.io/1/batch/mydataset%20send'
   end
+
+  class ValueWithEventDuringTransmission
+    def initialize(libhoney)
+      @libhoney = libhoney
+    end
+
+    # to_s gets called by Libhoney::Cleaner on field values during
+    # transmission, so if an instance of this class is assigned to a field on
+    # an outer event, the inner event will be generated from within the
+    # send_loop thread
+    def to_s
+      event.send
+      'value'
+    end
+
+    def event
+      event = @libhoney.event
+      event.metadata = 'inner'
+      event
+    end
+  end
+
+  def test_event_during_transmission
+    stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset').to_rack(StubHoneycombServer)
+
+    event = @honey.event
+    event.metadata = 'outer'
+    event.add_field('field', ValueWithEventDuringTransmission.new(@honey))
+    event.send
+
+    # We can't rely on @honey.close to flush both events here. At first, only the outer event is in
+    # the batch_queue. Once we call @honey.close, the outer event is flushed to the send_queue, and
+    # the batch_loop exits. But then the inner event is triggered on the send_loop after we pop the
+    # outer event off the send_queue. If we didn't prevent it, libhoney would proceed to push the
+    # inner event to the batch_queue and start the batch_loop up all over again, along with more
+    # send_loop threads. That effectively undoes the @honey.close and seems to lead to other
+    # threading errors that are hard to grok: sometimes deadlocks, sometimes hanging indefinitely,
+    # sometimes a different thread does the POST to Honeycomb but it's unstubbed on that thread...
+    #
+    # So instead of all that, wait a little bit for both events to get processed organically by the
+    # existing batch_loop thread. It shouldn't take long.
+    responses = []
+    begin
+      Timeout.timeout(1) do
+        while (response = @honey.responses.pop)
+          responses << response
+        end
+      end
+    rescue Timeout::Error
+      if responses.count < 2
+        flunk "waited for libhoney to process 2 events, got #{responses.count} (try increasing timeout?)"
+      elsif responses.count > 2
+        flunk "expected only 2 events to be processed, got #{responses.count}: #{responses.inspect}"
+      else
+        @honey.close # should now be able to safely close, since we got through both of the events
+      end
+    end
+
+    # the order of these responses changes before & after the associated fix,
+    # so keeping this loose to run the test on both the old and new versions
+    outer = responses.find { |response| response.metadata == 'outer' }
+    inner = responses.find { |response| response.metadata == 'inner' }
+
+    refute_nil outer, 'could not find response for outer event'
+    refute_nil inner, 'could not find response for inner event'
+
+    assert_nil outer.error, 'outer event should have succeeded'
+    refute_nil inner.error, 'inner event should have been dropped'
+  end
+
+  class ValueWithInfiniteEventsDuringTransmission < ValueWithEventDuringTransmission
+    def event
+      event = super
+      event.add_field('self', self) # self.to_s triggers yet another event when *this* event gets sent
+      event
+    end
+  end
+
+  def test_infinite_events_during_transmission
+    stub_request(:post, 'https://api.honeycomb.io/1/batch/mydataset').to_rack(StubHoneycombServer)
+
+    event = @honey.event
+    event.metadata = 'outer'
+    event.add_field('field', ValueWithInfiniteEventsDuringTransmission.new(@honey))
+    event.send
+
+    # Similar to test_event_during_transmission, we can't rely on @honey.close here. Furthermore,
+    # the failure mode here results in an infinite loop anyway, so we just want to do this "wait for
+    # a bit, then look at the results" pattern regardless.
+    #
+    # We still expect 2 responses, assuming the inner event that would have triggered the infinite
+    # loop gets booted out as an error response.
+    responses = []
+    begin
+      Timeout.timeout(1) do
+        while (response = @honey.responses.pop)
+          responses << response
+        end
+      end
+    rescue Timeout::Error
+      if responses.count > 2
+        flunk "gave up after processing #{responses.count} events, probably reproduced an infinite loop bug"
+      elsif responses.count < 2
+        flunk "expected 2 events to be generated, got #{responses.count} (try increasing timeout?)"
+      else
+        @honey.close # should now be able to safely close, since we got both responses
+      end
+    end
+
+    outer = responses.find { |response| response.metadata == 'outer' }
+    inner = responses.find { |response| response.metadata == 'inner' }
+
+    refute_nil outer, 'could not find response for outer event'
+    refute_nil inner, 'could not find response for inner event'
+
+    assert_nil outer.error, 'outer event should have succeeded'
+    refute_nil inner.error, 'inner event should have been dropped'
+  end
 end
 
 class ExperimentalLibhoneyResponseBlaster < Minitest::Test
