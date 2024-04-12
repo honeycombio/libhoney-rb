@@ -16,7 +16,10 @@ module Libhoney
 
     # Records an event
     def add(event)
+      Thread.current[:libhoney_transmitting] = true
       @events.push(event)
+    ensure
+      Thread.current[:libhoney_transmitting] = false
     end
 
     # Does nothing.
