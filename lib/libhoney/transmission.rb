@@ -53,7 +53,8 @@ module Libhoney
       ensure_threads_running
     end
 
-    def send_loop
+    def send_loop # rubocop:disable Metrics/AbcSize
+      Thread.current[:libhoney_transmitting] = true
       http_clients = build_http_clients
 
       # eat events until we run out
@@ -106,6 +107,7 @@ module Libhoney
           nil
         end
       end
+      Thread.current[:libhoney_transmitting] = false
     end
 
     def close(drain)

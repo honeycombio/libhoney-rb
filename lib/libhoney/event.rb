@@ -121,7 +121,12 @@ module Libhoney
     #
     # @return [self] this event.
     def send_presampled
-      @libhoney.send_event(self)
+      if Thread.current[:libhoney_transmitting]
+        @libhoney.send_dropped_response(self, 'dropped event generated during transmission')
+      else
+        @libhoney.send_event(self)
+      end
+
       self
     end
   end

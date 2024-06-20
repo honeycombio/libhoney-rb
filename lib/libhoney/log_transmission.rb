@@ -19,6 +19,7 @@ module Libhoney
 
     # Prints an event
     def add(event)
+      Thread.current[:libhoney_transmitting] = true
       if @verbose
         metadata = "Honeycomb dataset '#{event.dataset}' | #{event.timestamp.iso8601}"
         metadata << " (sample rate: #{event.sample_rate})" if event.sample_rate != 1
@@ -27,6 +28,8 @@ module Libhoney
       clean_data(event.data).tap do |data|
         @output.puts(data.to_json)
       end
+    ensure
+      Thread.current[:libhoney_transmitting] = false
     end
 
     # Flushes the output (but does not close it)
