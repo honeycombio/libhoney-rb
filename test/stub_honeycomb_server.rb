@@ -3,6 +3,7 @@ require 'sinatra/json'
 
 class StubHoneycombServer < Sinatra::Base
   set :json_encoder, :to_json
+  set :host_authorization, { permitted_hosts: [] }
 
   before do
     @batch = JSON.parse(request.body.read.to_s)
