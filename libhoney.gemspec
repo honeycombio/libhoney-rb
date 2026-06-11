@@ -27,7 +27,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'lockstep'
   spec.add_development_dependency 'minitest', '~> 5.0'
   spec.add_development_dependency 'minitest-reporters'
-  spec.add_development_dependency 'rake', '~> 13.0'
+  spec.add_development_dependency 'ostruct' # required by old rubocop version
+  spec.add_development_dependency 'rake', '>= 13.0'
   spec.add_development_dependency 'rubocop', '1.12.1'
   spec.add_development_dependency 'sinatra'
   spec.add_development_dependency 'sinatra-contrib'
@@ -37,5 +38,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'yardstick', '~> 0.9'
   spec.add_dependency 'addressable', '~> 2.0'
   spec.add_dependency 'excon'
-  spec.add_dependency 'http', '>= 2.0', '< 6.0'
+  spec.add_dependency 'http', '>= 2.0'
 end
