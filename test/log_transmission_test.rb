@@ -7,7 +7,7 @@ class LogTransmissionClientTest < Minitest::Test
     stdout = StringIO.new
     transmission = Libhoney::LogTransmissionClient.new(output: stdout)
     data = { not_a_good_string: "\x89" }
-    transmission.add(OpenStruct.new(data: data))
+    transmission.add(Struct.new(:data).new(data))
     assert_equal('{"not_a_good_string":"�"}', stdout.string.strip)
   end
 end
